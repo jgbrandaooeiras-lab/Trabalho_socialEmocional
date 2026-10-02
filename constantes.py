@@ -1,0 +1,9 @@
+LARGURA = 1280
+ALTURA = 740
+
+TITULO = "ALGUMA COISA"
+
+FPS = 30
+
+# Cores
+PRETO = (0, 0, 0)
