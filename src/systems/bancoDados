@@ -1,0 +1,123 @@
+"""Persistência do jogo com SQLite.
+ 
+Tabelas:
+  torneios     -> um save/jogo por linha (time do usuário, rodada atual, medidores atuais)
+  partidas     -> todas as partidas simuladas do torneio (mandante, visitante, gols)
+  decisoes     -> decisões tomadas pelo usuário e os medidores resultantes
+  checkpoints  -> foto dos medidores ao fim de cada rodada (permite "voltar no save")
+"""
+import os
+import sqlite3
+from datetime import datetime
+ 
+MEDIDORES = ("relacionamento", "estabilidade", "reputacao")
+ 
+ESQUEMA = """
+CREATE TABLE IF NOT EXISTS torneios (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome            TEXT NOT NULL,
+    time_usuario    TEXT NOT NULL,
+    rodada_atual    INTEGER NOT NULL DEFAULT 1,
+    status          TEXT NOT NULL DEFAULT 'em_andamento',
+    relacionamento  INTEGER NOT NULL,
+    estabilidade    INTEGER NOT NULL,
+    reputacao       INTEGER NOT NULL,
+    criado_em       TEXT NOT NULL,
+    atualizado_em   TEXT NOT NULL
+);
+ 
+CREATE TABLE IF NOT EXISTS partidas (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    torneio_id   INTEGER NOT NULL REFERENCES torneios(id) ON DELETE CASCADE,
+    rodada       INTEGER NOT NULL,
+    mandante     TEXT NOT NULL,
+    visitante    TEXT NOT NULL,
+    gols_mandante  INTEGER NOT NULL,
+    gols_visitante INTEGER NOT NULL
+);
+ 
+CREATE TABLE IF NOT EXISTS decisoes (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    torneio_id      INTEGER NOT NULL REFERENCES torneios(id) ON DELETE CASCADE,
+    rodada          INTEGER NOT NULL,
+    decisao_id      TEXT NOT NULL,
+    indice_escolha  INTEGER NOT NULL,
+    relacionamento  INTEGER NOT NULL,
+    estabilidade    INTEGER NOT NULL,
+    reputacao       INTEGER NOT NULL
+);
+ 
+CREATE TABLE IF NOT EXISTS checkpoints (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    torneio_id      INTEGER NOT NULL REFERENCES torneios(id) ON DELETE CASCADE,
+    rodada          INTEGER NOT NULL,
+    relacionamento  INTEGER NOT NULL,
+    estabilidade    INTEGER NOT NULL,
+    reputacao       INTEGER NOT NULL,
+    criado_em       TEXT NOT NULL,
+    UNIQUE (torneio_id, rodada)
+);
+"""
+ 
+ 
+def _agora():
+    return datetime.now().isoformat(timespec="seconds")
+ 
+ 
+def conectar(caminho="data/jogo.db"):
+    pasta = os.path.dirname(caminho)
+    if pasta:
+        os.makedirs(pasta, exist_ok=True)
+    conn = sqlite3.connect(caminho)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.executescript(ESQUEMA)
+    return conn
+ 
+ 
+# ---------- torneio / save ----------
+ 
+def novo_torneio(conn, nome, time_usuario, tecnico):
+    """Cria um torneio novo e já grava o checkpoint da rodada 1."""
+    with conn:
+        cur = conn.execute(
+            "INSERT INTO torneios (nome, time_usuario, relacionamento, estabilidade,"
+            " reputacao, criado_em, atualizado_em) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (nome, time_usuario, tecnico["relacionamento"], tecnico["estabilidade"],
+             tecnico["reputacao"], _agora(), _agora()),
+        )
+        torneio_id = cur.lastrowid
+        _gravar_checkpoint(conn, torneio_id, 1, tecnico)
+    return torneio_id
+ 
+ 
+def listar_torneios(conn):
+    return conn.execute(
+        "SELECT id, nome, time_usuario, rodada_atual, status, atualizado_em"
+        " FROM torneios ORDER BY atualizado_em DESC"
+    ).fetchall()
+ 
+ 
+def carregar_torneio(conn, torneio_id):
+    """Retorna (torneio, tecnico) para retomar o jogo de onde parou."""
+    t = conn.execute("SELECT * FROM torneios WHERE id = ?", (torneio_id,)).fetchone()
+    if t is None:
+        return None, None
+    tecnico = {m: t[m] for m in MEDIDORES}
+    return dict(t), tecnico
+ 
+ 
+def excluir_torneio(conn, torneio_id):
+    with conn:
+        conn.execute("DELETE FROM torneios WHERE id = ?", (torneio_id,))
+ 
+ 
+# ---------- registro durante o jogo ----------
+ 
+def registrar_partida(conn, torneio_id, rodada, mandante, visitante, gols_m, gols_v):
+    with conn:
+        conn.execute(
+            "INSERT INTO partidas (torneio_id, rodada, mandante, visitante,"
+            " gols_mandante, gols_visitante) VALUES (?, ?, ?, ?, ?, ?)",
+            (torneio_id, rodada, mandante, visitante, gols_m, gols_v),
+        )
