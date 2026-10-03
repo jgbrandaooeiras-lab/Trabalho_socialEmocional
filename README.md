@@ -111,8 +111,8 @@ Para adicionar uma decisão, basta incluir um novo objeto no arquivo, informando
 
 ## Autores
 
-- _Adicione aqui os nomes dos integrantes da equipe_
+- _Em breve..._
 
 ## Licença
 
-_Defina a licença do projeto (por exemplo, MIT) ou remova esta seção._
+_A definir...._
