@@ -1,0 +1,16 @@
+import os
+
+IGNORAR_PASTAS = {".git", "venv", ".venv", "__pycache__", "node_modules"}
+EXTENSOES = {".py", ".json", ".md", ".txt"}
+
+with open("projeto_completo.txt", "w", encoding="utf-8") as saida:
+    for pasta, subpastas, arquivos in os.walk("."):
+        subpastas[:] = [p for p in subpastas if p not in IGNORAR_PASTAS]
+        for nome in sorted(arquivos):
+            if nome == "projeto_completo.txt":
+                continue
+            if os.path.splitext(nome)[1] in EXTENSOES:
+                caminho = os.path.join(pasta, nome)
+                saida.write(f"\n===== {caminho} =====\n")
+                with open(caminho, encoding="utf-8") as f:
+                    saida.write(f.read())

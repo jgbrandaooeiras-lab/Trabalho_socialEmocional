@@ -16,9 +16,9 @@
     },
     {
         "id": "d02",
-        "id_partida" : 2,
-        "texto": "Seu atacante perdeu um penâlti decisivo",
-        "opcoes":[
+        "id_partida": 2,
+        "texto": "Seu atacante perdeu um pênalti decisivo",
+        "opcoes": [
             {
                 "texto": "Conversar em particular",
                 "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 0}
@@ -31,9 +31,9 @@
     },
     {
         "id": "d03",
-        "id_partida": 4,
-        "texto": "Após a derrota, um repórter na coletiva se você vai continuar no cargo",
-        "opcoes":[
+        "id_partida": 3,
+        "texto": "Após a derrota, um repórter pergunta na coletiva se você vai continuar no cargo",
+        "opcoes": [
             {
                 "texto": "Responder com calma e falar do trabalho que está sendo feito",
                 "efeitos": {"relacionamento": 5, "estabilidade": 5, "reputacao": 5}
@@ -49,13 +49,13 @@
         ]
     },
     {
-        "id":"d04",
-        "id_partida": 5,
+        "id": "d04",
+        "id_partida": 4,
         "texto": "Dois jogadores brigaram em campo e um deles foi expulso, deixando o time com um a menos",
-        "opcoes":[
+        "opcoes": [
             {
                 "texto": "Ouvir os dois separadamente e definir uma punição justa",
-                "efeitos": {"relacionamento":10, "estabilidade": 5, "reputacao":0}
+                "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 0}
             },
             {
                 "texto": "Afastar os dois do elenco sem conversar",
@@ -63,15 +63,15 @@
             },
             {
                 "texto": "Ignorar o caso para não desgastar o grupo",
-                "efeitos":{"relacionamento": -5, "estabilidade": -5, "reputacao": -5}
+                "efeitos": {"relacionamento": -5, "estabilidade": -5, "reputacao": -5}
             }
         ]
     },
     {
         "id": "d05",
-        "id_partida": 6,
+        "id_partida": 5,
         "texto": "Um jogador reserva reclama na imprensa que não está recebendo oportunidades",
-        "opcoes":[
+        "opcoes": [
             {
                 "texto": "Chamá-lo para uma conversa e explicar os critérios de escalação",
                 "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 0}
@@ -84,9 +84,9 @@
     },
     {
         "id": "d06",
-        "id_partida": 7,
+        "id_partida": 6,
         "texto": "A diretoria diz que o resultado precisa melhorar ou você pode ser demitido",
-        "opcoes":[
+        "opcoes": [
             {
                 "texto": "Pedir apoio e apresentar um plano para as próximas rodadas",
                 "efeitos": {"relacionamento": 5, "estabilidade": 5, "reputacao": 10}
@@ -97,46 +97,45 @@
             },
             {
                 "texto": "Bater de frente com a diretoria",
-                "efeitos":{"relacionamento": -5, "estabilidade": -5, "reputacao": -10}
+                "efeitos": {"relacionamento": -5, "estabilidade": -5, "reputacao": -10}
             }
         ]
-
     },
     {
-        "id":"d07",
-        "id_partida": 9,
-        "texto": "Jogo decisivo: Seu melhor jogador está cansado mas o time depende dele",
-        "opcoes":[
+        "id": "d07",
+        "id_partida": 7,
+        "texto": "Jogo decisivo: seu melhor jogador está cansado mas o time depende dele",
+        "opcoes": [
             {
                 "texto": "Poupá-lo e apostar no jogador reserva",
-                "efeitos":{"relacionamento": 10, "estabilidade": 5, "reputacao": -5}
+                "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": -5}
             },
             {
                 "texto": "Escalá-lo mesmo assim, arriscando lesão",
                 "efeitos": {"relacionamento": -10, "estabilidade": -5, "reputacao": 10}
             },
             {
-                "texto": "Conversar com ele e deixar a decisão compartilhada com o departamento medico",
+                "texto": "Conversar com ele e deixar a decisão compartilhada com o departamento médico",
                 "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 5}
             }
         ]
     },
     {
-        "id":"d08",
-        "id_partida": 10,
+        "id": "d08",
+        "id_partida": 7,
         "texto": "Na véspera da última rodada, a torcida protesta na porta do centro de treinamento",
-        "opcoes":[
+        "opcoes": [
             {
                 "texto": "Conversar com os torcedores e pedir apoio",
                 "efeitos": {"relacionamento": 5, "estabilidade": 10, "reputacao": 5}
             },
             {
                 "texto": "Ignorar e focar só no treino",
-                "efeitos":{"relacionamento": 0, "estabilidade": 0, "reputacao": 0}
+                "efeitos": {"relacionamento": 0, "estabilidade": 0, "reputacao": 0}
             },
             {
                 "texto": "Cobrar os jogadores publicamente por causa da pressão",
-                "efeitos":{"relacionamento": -10, "estabilidade": -5, "reputacao": 5}
+                "efeitos": {"relacionamento": -10, "estabilidade": -5, "reputacao": 5}
             }
         ]
     }
