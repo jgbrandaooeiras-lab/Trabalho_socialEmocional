@@ -2,6 +2,7 @@ import pygame
 from sys import exit
 from pygame.locals import *
 import constantes
+import os
 
 
 class Game:
@@ -44,6 +45,9 @@ class Game:
         self.todas_sprites.draw(self.tela)
         pygame.display.flip()
 
+    def carregar_arquivos(self):
+        escudos_times = os.path.join(os.getcwdb(), "tela_principal")
+
     def tela_de_start(self):
         pass
 
@@ -53,3 +57,4 @@ g.tela_de_start()
 
 while g.esta_rodando:
     g.novo_jogo()
+    g.carregar_arquivos
