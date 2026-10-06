@@ -1,5 +1,5 @@
 import json
-
+import random
 import constantes
 
 MEDIDORES = ("relacionamento", "estabilidade", "reputacao")
@@ -32,3 +32,15 @@ def aplicar_efeito(tecnico, decisao, indice_escolha):
     efeitos = decisao["opcoes"][indice_escolha]["efeitos"]
     for medidor in MEDIDORES:
         tecnico[medidor] = limitar(tecnico[medidor] + efeitos[medidor])
+
+def sortear_forca_perto_base(forca_base, variacao=15):
+    """Sorteia uma força próxima da base, com variação de até ±variacao."""
+    minimo = max(constantes.FORCA_MIN, forca_base - variacao)
+    maximo = min(constantes.FORCA_MAX, forca_base + variacao)
+    return random.randint(minimo, maximo)
+
+
+BONUS_POR_ACERTO = 8   # ajuste no teste de jogo
+
+def forca_efetiva(forca_sorteada, acertos):
+    return min(constantes.FORCA_MAX, forca_sorteada + acertos * constantes.BONUS_POR_ACERTO)
