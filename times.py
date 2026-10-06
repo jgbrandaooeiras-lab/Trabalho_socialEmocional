@@ -38,6 +38,16 @@ def sortear_forca():
     """Força aleatória de 0 a 100 para um time em uma partida."""
     return random.randint(FORCA_MIN, FORCA_MAX)
 
-def sortear_forcas_da_rodada():
-    """Sorteia a força dos 9 times de uma vez: {'Flamengo': 57, ...}"""
-    return {t["nome"]: sortear_forca() for t in TIMES}
+
+def sortear_forca_perto_base(forca_base, variacao=15, rng=random):
+    """Sorteia uma força dentro da variação permitida em torno da força base."""
+    minimo = max(FORCA_MIN, forca_base - variacao)
+    maximo = min(FORCA_MAX, forca_base + variacao)
+    return rng.randint(minimo, maximo)
+
+
+def sortear_forcas_da_rodada(variacao=15, rng=random, forcas_base=None):
+    """Sorteia a força de cada time para uma rodada, preservando sua força base."""
+    bases = forcas_base or {t["nome"]: t["forca"] for t in TIMES}
+    return {nome: sortear_forca_perto_base(base, variacao, rng)
+            for nome, base in bases.items()}

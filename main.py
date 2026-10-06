@@ -168,7 +168,9 @@ class Game:
     def jogar_rodada(self):
         finalizado = self.rodada == self.total_rodadas
         self.resultados = torneio.simular_rodada(self.jogos, forcas_dos_times(),
-                                                 self.time_usuario, self.tecnico)
+                                                 self.time_usuario, self.tecnico,
+                                                 acertos=sd.contar_acertos(
+                                                     self.decisoes, self.decisoes_tomadas))
         # tudo é gravado de uma vez: se fechar o jogo no meio da rodada, nada fica pela metade
         banco.fechar_rodada(self.conn, self.tid, self.rodada, self.resultados,
                             self.decisoes_tomadas, self.tecnico, finalizado)
@@ -397,7 +399,7 @@ class Game:
 
     def desenhar_resultado(self):
         self.titulo_tela(f"Resultados da rodada {self.rodada}")
-        for i, (mandante, visitante, gm, gv) in enumerate(self.resultados):
+        for i, (mandante, visitante, gm, gv, _, _, _) in enumerate(self.resultados):
             y = 110 + i * 70
             if self.time_usuario in (mandante, visitante):
                 pygame.draw.rect(self.tela, constantes.DESTAQUE, (300, y - 6, 680, 64),
@@ -414,7 +416,8 @@ class Game:
         if jogo is None:
             texto, cor = "Seu time folgou nesta rodada.", constantes.CINZA
         else:
-            _, _, gm, gv = next(r for r in self.resultados if self.time_usuario in r[:2])
+            _, _, gm, gv, *_ = next(r for r in self.resultados
+                                    if self.time_usuario in r[:2])
             meus, deles = (gm, gv) if jogo[0] == self.time_usuario else (gv, gm)
             if meus > deles:
                 texto, cor = "Vitória! +3 pontos", constantes.VERDE
@@ -483,7 +486,14 @@ class Game:
             linha = (f"R{p['rodada']}: {p['mandante']} {p['gols_mandante']} x "
                      f"{p['gols_visitante']} {p['visitante']}")
             desenhar_texto(self.tela, linha, self.fonte_pequena, constantes.BRANCO, (60, y))
-            y += 30
+            if p["forca_casa"] is not None:
+                detalhe = (f"Força {p['forca_casa']} x {p['forca_fora']}  |  "
+                           f"Acertos: {p['acertos']}")
+                desenhar_texto(self.tela, detalhe, self.fonte_pequena, constantes.CINZA,
+                               (60, y + 22))
+                y += 50
+            else:
+                y += 30
         if not meus_jogos:
             desenhar_texto(self.tela, "Nenhum jogo disputado ainda.", self.fonte_pequena,
                            constantes.CINZA, (60, y))

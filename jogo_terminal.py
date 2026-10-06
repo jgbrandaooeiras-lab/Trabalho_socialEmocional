@@ -90,12 +90,15 @@ def jogar(conn, tid, decisoes, calendario, forcas):
             tomadas.append((decisao["id"], indice, dict(tecnico)))
             mostrar_medidores(tecnico)
 
-        resultados = torneio.simular_rodada(jogos, forcas, time_usuario, tecnico)
+        resultados = torneio.simular_rodada(
+            jogos, forcas, time_usuario, tecnico,
+            acertos=sd.contar_acertos(decisoes, tomadas))
         banco.fechar_rodada(conn, tid, rodada, resultados, tomadas, tecnico,
                             finalizado=(rodada == total))
         print("\nResultados:")
-        for mandante, visitante, gm, gv in resultados:
-            print(f"  {mandante} {gm} x {gv} {visitante}")
+        for mandante, visitante, gm, gv, forca_casa, forca_fora, acertos in resultados:
+            print(f"  {mandante} {gm} x {gv} {visitante} "
+                  f"(força {forca_casa} x {forca_fora}; acertos {acertos})")
         mostrar_classificacao(conn, tid, time_usuario)
 
         if rodada < total:

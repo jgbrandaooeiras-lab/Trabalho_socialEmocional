@@ -4,13 +4,15 @@ Jogo em **Python + pygame** em que você assume o comando de um time em um torne
 
 ## Como funciona
 
-- O torneio tem 8 times (a lista fica em `times.py` e pode ser ampliada), e cada um enfrenta todos os outros uma vez.
+- O torneio tem 9 times (a lista fica em `times.py` e pode ser ampliada), e cada um enfrenta todos os outros uma vez.
 - Em algumas partidas o técnico precisa tomar uma decisão com 2 ou 3 opções.
 - Cada opção altera três medidores (de 0 a 100):
   - **Relacionamento**: clima com elenco e torcida
   - **Estabilidade**: segurança no cargo
   - **Reputação**: imagem perante imprensa e diretoria
 - Os medidores dão um bônus (ou penalidade) de até ±15 na força do seu time. Medidores altos aumentam as chances de vitória.
+- A força varia em até ±15 em torno da força base de cada time a cada rodada.
+- Cada decisão marcada como assertiva soma 8 pontos à força do seu time naquela partida, até o limite de 100.
 - Vitória vale 3 pontos, empate 1 e derrota 0. Critérios de desempate: saldo de gols e gols marcados.
 
 ## Salvamento com SQLite
@@ -28,7 +30,7 @@ A rodada é gravada de uma só vez ao terminar. Se você fechar o jogo no meio d
 | Tabela        | Conteúdo                                                         |
 |---------------|------------------------------------------------------------------|
 | `torneios`    | Um save por linha: time do usuário, rodada atual, medidores      |
-| `partidas`    | Todas as partidas simuladas (mandante, visitante, gols)          |
+| `partidas`    | Todas as partidas simuladas (times, gols, forças usadas e acertos) |
 | `decisoes`    | Decisões tomadas e medidores resultantes                         |
 | `checkpoints` | Foto dos medidores ao fim de cada rodada, usada para voltar save |
 
@@ -71,6 +73,7 @@ Execute a partir da **raiz** do projeto:
 python -m tests.teste_decisoes
 python -m tests.teste_torneio
 python -m tests.teste_banco
+python -m tests.teste_novas_regras
 ```
 
 Os testes do banco usam um banco em memória e não mexem no seu `data/jogo.db`.
@@ -109,13 +112,14 @@ Os testes do banco usam um banco em memória e não mexem no seu `data/jogo.db`.
   "opcoes": [
     {
       "texto": "Reunir elenco e assumir parte da culpa",
+      "assertiva": true,
       "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 0}
     }
   ]
 }
 ```
 
-O `id_partida` é o número da partida **do seu time** (1ª, 2ª, 3ª...), não da rodada. Uma partida pode ter mais de uma decisão. Para adicionar uma decisão, basta incluir um novo objeto no arquivo. Com N times, o time do usuário joga N-1 partidas, então o `id_partida` vai de 1 até N-1.
+O `id_partida` é o número da partida **do seu time** (1ª, 2ª, 3ª...), não da rodada. Uma partida pode ter mais de uma decisão. Marque `assertiva` como `true` nas opções que concedem bônus; use `false` nas demais. Para adicionar uma decisão, basta incluir um novo objeto no arquivo. Com N times, o time do usuário joga N-1 partidas, então o `id_partida` vai de 1 até N-1.
 
 ### Adicionando um time
 

@@ -35,7 +35,10 @@ CREATE TABLE IF NOT EXISTS partidas (
     mandante     TEXT NOT NULL,
     visitante    TEXT NOT NULL,
     gols_mandante  INTEGER NOT NULL,
-    gols_visitante INTEGER NOT NULL
+    gols_visitante INTEGER NOT NULL,
+    forca_casa     INTEGER,
+    forca_fora     INTEGER,
+    acertos        INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS decisoes (
@@ -76,7 +79,16 @@ def conectar(caminho=None):
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     conn.executescript(ESQUEMA)
+    _migrar_partidas(conn)
     return conn
+
+
+def _migrar_partidas(conn):
+    """Adiciona os metadados de força a bancos criados por versões anteriores."""
+    colunas = {linha["name"] for linha in conn.execute("PRAGMA table_info(partidas)")}
+    for nome in ("forca_casa", "forca_fora", "acertos"):
+        if nome not in colunas:
+            conn.execute(f"ALTER TABLE partidas ADD COLUMN {nome} INTEGER")
 
 
 # ---------- torneio / save ----------
@@ -118,12 +130,15 @@ def excluir_torneio(conn, torneio_id):
 
 # ---------- registro durante o jogo ----------
 
-def registrar_partida(conn, torneio_id, rodada, mandante, visitante, gols_m, gols_v):
+def registrar_partida(conn, torneio_id, rodada, mandante, visitante, gols_m, gols_v,
+                      forca_casa=None, forca_fora=None, acertos=None):
     with conn:
         conn.execute(
             "INSERT INTO partidas (torneio_id, rodada, mandante, visitante,"
-            " gols_mandante, gols_visitante) VALUES (?, ?, ?, ?, ?, ?)",
-            (torneio_id, rodada, mandante, visitante, gols_m, gols_v),
+            " gols_mandante, gols_visitante, forca_casa, forca_fora, acertos)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (torneio_id, rodada, mandante, visitante, gols_m, gols_v,
+             forca_casa, forca_fora, acertos),
         )
 
 
@@ -170,11 +185,15 @@ def fechar_rodada(conn, torneio_id, rodada, partidas, decisoes_tomadas, tecnico,
     Depois de gravar, o torneio avança para rodada + 1 e ganha um checkpoint.
     """
     with conn:
-        for mandante, visitante, gols_m, gols_v in partidas:
+        for partida in partidas:
+            mandante, visitante, gols_m, gols_v = partida[:4]
+            forca_casa, forca_fora, acertos = (*partida[4:7], None, None, None)[:3]
             conn.execute(
                 "INSERT INTO partidas (torneio_id, rodada, mandante, visitante,"
-                " gols_mandante, gols_visitante) VALUES (?, ?, ?, ?, ?, ?)",
-                (torneio_id, rodada, mandante, visitante, gols_m, gols_v),
+                " gols_mandante, gols_visitante, forca_casa, forca_fora, acertos)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (torneio_id, rodada, mandante, visitante, gols_m, gols_v,
+                 forca_casa, forca_fora, acertos),
             )
         for decisao_id, indice, medidores in decisoes_tomadas:
             conn.execute(
@@ -234,7 +253,8 @@ def voltar_checkpoint(conn, torneio_id, rodada):
 
 def historico_partidas(conn, torneio_id):
     return conn.execute(
-        "SELECT rodada, mandante, visitante, gols_mandante, gols_visitante"
+        "SELECT rodada, mandante, visitante, gols_mandante, gols_visitante,"
+        " forca_casa, forca_fora, acertos"
         " FROM partidas WHERE torneio_id = ? ORDER BY rodada, id",
         (torneio_id,),
     ).fetchall()

@@ -44,3 +44,14 @@ BONUS_POR_ACERTO = 8   # ajuste no teste de jogo
 
 def forca_efetiva(forca_sorteada, acertos):
     return min(constantes.FORCA_MAX, forca_sorteada + acertos * constantes.BONUS_POR_ACERTO)
+
+
+def contar_acertos(decisoes, decisoes_tomadas):
+    """Conta escolhas marcadas como assertivas no arquivo de decisões."""
+    por_id = {decisao["id"]: decisao for decisao in decisoes}
+    acertos = 0
+    for decisao_id, indice_escolha, *_ in decisoes_tomadas:
+        decisao = por_id.get(decisao_id)
+        if decisao and decisao["opcoes"][indice_escolha].get("assertiva", False):
+            acertos += 1
+    return acertos

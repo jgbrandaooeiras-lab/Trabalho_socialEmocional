@@ -6,10 +6,12 @@
         "opcoes": [
             {
                 "texto": "Reunir elenco e assumir parte da culpa",
+                "assertiva": true,
                 "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 0}
             },
             {
                 "texto": "Culpar a defesa publicamente",
+                "assertiva": false,
                 "efeitos": {"relacionamento": -15, "estabilidade": -5, "reputacao": 5}
             }
         ]
@@ -21,10 +23,12 @@
         "opcoes": [
             {
                 "texto": "Conversar em particular",
+                "assertiva": true,
                 "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 0}
             },
             {
                 "texto": "Criticar na frente do elenco",
+                "assertiva": false,
                 "efeitos": {"relacionamento": -15, "estabilidade": -5, "reputacao": 5}
             }
         ]
@@ -36,14 +40,17 @@
         "opcoes": [
             {
                 "texto": "Responder com calma e falar do trabalho que está sendo feito",
+                "assertiva": true,
                 "efeitos": {"relacionamento": 5, "estabilidade": 5, "reputacao": 5}
             },
             {
                 "texto": "Perder a paciência e rebater o repórter",
+                "assertiva": false,
                 "efeitos": {"relacionamento": -5, "estabilidade": -10, "reputacao": -10}
             },
             {
                 "texto": "Culpar a arbitragem",
+                "assertiva": false,
                 "efeitos": {"relacionamento": -5, "estabilidade": 0, "reputacao": 5}
             }
         ]
@@ -55,14 +62,17 @@
         "opcoes": [
             {
                 "texto": "Ouvir os dois separadamente e definir uma punição justa",
+                "assertiva": true,
                 "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 0}
             },
             {
                 "texto": "Afastar os dois do elenco sem conversar",
+                "assertiva": false,
                 "efeitos": {"relacionamento": -15, "estabilidade": 0, "reputacao": 5}
             },
             {
                 "texto": "Ignorar o caso para não desgastar o grupo",
+                "assertiva": false,
                 "efeitos": {"relacionamento": -5, "estabilidade": -5, "reputacao": -5}
             }
         ]
@@ -74,10 +84,12 @@
         "opcoes": [
             {
                 "texto": "Chamá-lo para uma conversa e explicar os critérios de escalação",
+                "assertiva": true,
                 "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 0}
             },
             {
                 "texto": "Responder publicamente e expor o desempenho dele",
+                "assertiva": false,
                 "efeitos": {"relacionamento": -15, "estabilidade": -5, "reputacao": 5}
             }
         ]
@@ -89,14 +101,17 @@
         "opcoes": [
             {
                 "texto": "Pedir apoio e apresentar um plano para as próximas rodadas",
+                "assertiva": true,
                 "efeitos": {"relacionamento": 5, "estabilidade": 5, "reputacao": 10}
             },
             {
                 "texto": "Trocar metade do time por impulso pra mostrar reação",
+                "assertiva": false,
                 "efeitos": {"relacionamento": -10, "estabilidade": -10, "reputacao": 5}
             },
             {
                 "texto": "Bater de frente com a diretoria",
+                "assertiva": false,
                 "efeitos": {"relacionamento": -5, "estabilidade": -5, "reputacao": -10}
             }
         ]
@@ -108,14 +123,17 @@
         "opcoes": [
             {
                 "texto": "Poupá-lo e apostar no jogador reserva",
+                "assertiva": false,
                 "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": -5}
             },
             {
                 "texto": "Escalá-lo mesmo assim, arriscando lesão",
+                "assertiva": false,
                 "efeitos": {"relacionamento": -10, "estabilidade": -5, "reputacao": 10}
             },
             {
                 "texto": "Conversar com ele e deixar a decisão compartilhada com o departamento médico",
+                "assertiva": true,
                 "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 5}
             }
         ]
@@ -127,14 +145,17 @@
         "opcoes": [
             {
                 "texto": "Conversar com os torcedores e pedir apoio",
+                "assertiva": true,
                 "efeitos": {"relacionamento": 5, "estabilidade": 10, "reputacao": 5}
             },
             {
                 "texto": "Ignorar e focar só no treino",
+                "assertiva": false,
                 "efeitos": {"relacionamento": 0, "estabilidade": 0, "reputacao": 0}
             },
             {
                 "texto": "Cobrar os jogadores publicamente por causa da pressão",
+                "assertiva": false,
                 "efeitos": {"relacionamento": -10, "estabilidade": -5, "reputacao": 5}
             }
         ]

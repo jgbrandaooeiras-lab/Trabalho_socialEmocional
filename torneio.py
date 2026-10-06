@@ -2,6 +2,10 @@
 import math
 import random
 
+import constantes
+from times import sortear_forcas_da_rodada
+from src.systems import sistema_decisao as sd
+
 
 def gerar_calendario(nomes):
     """Todos contra todos em turno único (método do círculo).
@@ -72,19 +76,27 @@ def numero_do_jogo_do_usuario(calendario, rodada, time_usuario):
     return sum(1 for jogos in calendario[:rodada] if jogo_do_usuario(jogos, time_usuario))
 
 
-def simular_rodada(jogos, forcas, time_usuario, tecnico, rng=random):
-    """Simula todos os jogos da rodada. O time do usuário recebe o bônus do técnico.
+def simular_rodada(jogos, forcas, time_usuario, tecnico, rng=random, acertos=0):
+    """Simula os jogos com força sorteada; decisões assertivas favorecem o usuário.
 
-    Retorna lista de (mandante, visitante, gols_mandante, gols_visitante).
+    Retorna (mandante, visitante, gols_mandante, gols_visitante, forca_casa,
+    forca_fora, acertos) para cada partida.
     """
+    forcas_sorteadas = sortear_forcas_da_rodada(rng=rng, forcas_base=forcas)
     bonus = bonus_tecnico(tecnico)
     resultados = []
     for mandante, visitante in jogos:
-        forca_m, forca_v = forcas[mandante], forcas[visitante]
+        forca_m, forca_v = forcas_sorteadas[mandante], forcas_sorteadas[visitante]
+        acertos_partida = 0
         if mandante == time_usuario:
-            forca_m += bonus
+            forca_m = max(constantes.FORCA_MIN, min(
+                constantes.FORCA_MAX, sd.forca_efetiva(forca_m, acertos) + bonus))
+            acertos_partida = acertos
         if visitante == time_usuario:
-            forca_v += bonus
+            forca_v = max(constantes.FORCA_MIN, min(
+                constantes.FORCA_MAX, sd.forca_efetiva(forca_v, acertos) + bonus))
+            acertos_partida = acertos
         gols_m, gols_v = simular_partida(forca_m, forca_v, rng)
-        resultados.append((mandante, visitante, gols_m, gols_v))
+        resultados.append((mandante, visitante, gols_m, gols_v, forca_m, forca_v,
+                           acertos_partida))
     return resultados
