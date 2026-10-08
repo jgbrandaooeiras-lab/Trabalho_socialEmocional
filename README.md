@@ -70,10 +70,8 @@ python jogo_terminal.py
 Execute a partir da **raiz** do projeto:
 
 ```bash
-python -m tests.teste_decisoes
-python -m tests.teste_torneio
-python -m tests.teste_banco
-python -m tests.teste_novas_regras
+python -c "import runpy; runpy.run_path('tests/teste_decisoes.py', run_name='__main__')"
+python -c "import runpy; runpy.run_path('tests/teste_novas_regras.py', run_name='__main__')"
 ```
 
 Os testes do banco usam um banco em memória e não mexem no seu `data/jogo.db`.
