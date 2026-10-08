@@ -33,6 +33,7 @@ def aplicar_efeito(tecnico, decisao, indice_escolha):
     for medidor in MEDIDORES:
         tecnico[medidor] = limitar(tecnico[medidor] + efeitos[medidor])
 
+
 def sortear_forca_perto_base(forca_base, variacao=15):
     """Sorteia uma força próxima da base, com variação de até ±variacao."""
     minimo = max(constantes.FORCA_MIN, forca_base - variacao)
@@ -40,10 +41,13 @@ def sortear_forca_perto_base(forca_base, variacao=15):
     return random.randint(minimo, maximo)
 
 
-BONUS_POR_ACERTO = 8   # ajuste no teste de jogo
+BONUS_POR_ACERTO = 8  # ajuste no teste de jogo
+
 
 def forca_efetiva(forca_sorteada, acertos):
-    return min(constantes.FORCA_MAX, forca_sorteada + acertos * constantes.BONUS_POR_ACERTO)
+    return min(
+        constantes.FORCA_MAX, forca_sorteada + acertos * constantes.BONUS_POR_ACERTO
+    )
 
 
 def contar_acertos(decisoes, decisoes_tomadas):
