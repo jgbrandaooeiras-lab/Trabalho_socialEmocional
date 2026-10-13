@@ -4,8 +4,10 @@ Jogo em **Python + pygame** em que você assume o comando de um time em um torne
 
 ## Como funciona
 
-- O torneio tem 9 times (a lista fica em `times.py` e pode ser ampliada), e cada um enfrenta todos os outros uma vez.
-- Em algumas partidas o técnico precisa tomar uma decisão com 2 ou 3 opções.
+- O torneio tem 10 times (a lista fica em `times.py`), e cada um enfrenta todos os outros uma vez: 9 rodadas, sem folga.
+- Nas rodadas 1 a 8 o técnico toma uma decisão com 4 opções. A ordem das telas da rodada (anúncio, coletiva, decisão, resultado, tabela) vem do campo `fluxo` de cada decisão no `data/decisoes.json`; `condicao` escolhe entre duas decisões da mesma rodada (ex.: fora do top 3 ou mais de 3 derrotas) e `"resultado": "derrota"` faz o time perder aquela partida.
+- Medidores com média abaixo de 45 ou sem sequência de 2+ decisões assertivas seguidas = derrota. Com a sequência, cada acerto seguido (até 4) soma força ao time.
+- Música em loop (`audio/audiojogo.*`) e tela de configurações (botão CONFIG ou ESC) para volume, voltar ao menu inicial ou sair.
 - Cada opção altera três medidores (de 0 a 100):
   - **Relacionamento**: clima com elenco e torcida
   - **Estabilidade**: segurança no cargo
