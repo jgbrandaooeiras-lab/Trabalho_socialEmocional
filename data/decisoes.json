@@ -1,6 +1,7 @@
 [
     {
         "id": "d01",
+        "cenario": "vestiario",
         "id_partida": 1,
         "texto": "Seu time perdeu a estreia e o clima no vestiário está pesado",
         "opcoes": [
@@ -18,6 +19,7 @@
     },
     {
         "id": "d02",
+        "cenario": "campo",
         "id_partida": 2,
         "texto": "Seu atacante perdeu um pênalti decisivo",
         "opcoes": [
@@ -35,6 +37,7 @@
     },
     {
         "id": "d03",
+        "cenario": "coletiva",
         "id_partida": 3,
         "texto": "Após a derrota, um repórter pergunta na coletiva se você vai continuar no cargo",
         "opcoes": [
@@ -57,6 +60,7 @@
     },
     {
         "id": "d04",
+        "cenario": "campo",
         "id_partida": 4,
         "texto": "Dois jogadores brigaram em campo e um deles foi expulso, deixando o time com um a menos",
         "opcoes": [
@@ -79,6 +83,7 @@
     },
     {
         "id": "d05",
+        "cenario": "coletiva",
         "id_partida": 5,
         "texto": "Um jogador reserva reclama na imprensa que não está recebendo oportunidades",
         "opcoes": [
@@ -96,6 +101,7 @@
     },
     {
         "id": "d06",
+        "cenario": "vestiario",
         "id_partida": 6,
         "texto": "A diretoria diz que o resultado precisa melhorar ou você pode ser demitido",
         "opcoes": [
@@ -118,6 +124,7 @@
     },
     {
         "id": "d07",
+        "cenario": "vestiario",
         "id_partida": 7,
         "texto": "Jogo decisivo: seu melhor jogador está cansado mas o time depende dele",
         "opcoes": [
@@ -140,6 +147,7 @@
     },
     {
         "id": "d08",
+        "cenario": "campo",
         "id_partida": 7,
         "texto": "Na véspera da última rodada, a torcida protesta na porta do centro de treinamento",
         "opcoes": [
