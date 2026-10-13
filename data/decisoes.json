@@ -14,6 +14,16 @@
                 "texto": "Culpar a defesa publicamente",
                 "assertiva": false,
                 "efeitos": {"relacionamento": -15, "estabilidade": -5, "reputacao": 5}
+            },
+            {
+                "texto":"Ignorar perguntas e desviar do assunto",
+                "assertiva": false,
+                "efeitos":{"relacionamento": 5, "estabilidade": 0, "reputacao":-5} 
+            },
+            {
+                "texto": "Defender a defesa do time na coletiva",
+                "assertiva": false,
+                "efeitos":{"relacionamento":15, "estabilidade": 5, "reputacao":-5}
             }
         ]
     },
@@ -32,6 +42,16 @@
                 "texto": "Criticar na frente do elenco",
                 "assertiva": false,
                 "efeitos": {"relacionamento": -15, "estabilidade": -5, "reputacao": 5}
+            },
+            {
+                "texto": "Botar o jogador no banco no próximo jogo",
+                "assertiva": false,
+                "efeitos":{"relacionamento":-5, "estabilidade":0, "reputacao":10}
+            },
+            {
+                "texto": "Omitir o assunto",
+                "assertiva":false,
+                "efeitos":{"relacionamento":0, "estabilidade":-5, "reputacao":0}
             }
         ]
     },
@@ -55,6 +75,11 @@
                 "texto": "Culpar a arbitragem",
                 "assertiva": false,
                 "efeitos": {"relacionamento": -5, "estabilidade": 0, "reputacao": 5}
+            },
+            {
+                "texto":"Fazer uma piada zombando da pergunta",
+                "assertiva":false,
+                "efeitos":{"relacionamento":0, "estabilidade":-5, "reputacao":-15}
             }
         ]
     },
@@ -78,6 +103,11 @@
                 "texto": "Ignorar o caso para não desgastar o grupo",
                 "assertiva": false,
                 "efeitos": {"relacionamento": -5, "estabilidade": -5, "reputacao": -5}
+            },
+            {
+                "texto":"Rescindir o contrato dos dois jogadores",
+                "assertiva":false,
+                "efeitos":{"relacionamento":-20, "estabilidade":-15, "reputacao":-10}
             }
         ]
     },
@@ -96,6 +126,16 @@
                 "texto": "Responder publicamente e expor o desempenho dele",
                 "assertiva": false,
                 "efeitos": {"relacionamento": -15, "estabilidade": -5, "reputacao": 5}
+            },
+            {
+                "texto":"Colocar o jogador no time",
+                "assertiva":false,
+                "efeitos":{"relacionamento":10, "estabilidade":5, "reputacao":0}
+            },
+            {
+                "texto":"Ignorar o jogador",
+                "assertiva":false,
+                "efeitos":{"relacionamento":-10, "estabilidade":-10, "reputacao":5}
             }
         ]
     },
@@ -119,6 +159,11 @@
                 "texto": "Bater de frente com a diretoria",
                 "assertiva": false,
                 "efeitos": {"relacionamento": -5, "estabilidade": -5, "reputacao": -10}
+            },
+            {
+                "texto":"Pedir reforços para a diretoria",
+                "assertiva": false,
+                "efeitos":{"relacionamento":0, "estabilidade":5, "reputacao":10}
             }
         ]
     },
@@ -142,6 +187,11 @@
                 "texto": "Conversar com ele e deixar a decisão compartilhada com o departamento médico",
                 "assertiva": true,
                 "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 5}
+            },
+            {
+                "texto":"Deixar no banco e colocá-lo no decorrer da partida",
+                "assertiva":false,
+                "efeitos":{"relacionamento":5, "estabilidade":5, "reputacao":5}
             }
         ]
     },
@@ -165,6 +215,11 @@
                 "texto": "Cobrar os jogadores publicamente por causa da pressão",
                 "assertiva": false,
                 "efeitos": {"relacionamento": -10, "estabilidade": -5, "reputacao": 5}
+            },
+            {
+                "texto":"Xingar a torcida",
+                "assertiva":false,
+                "efeitos":{"relacionamento":-10, "estabilidade":-15, "reputacao":-20}
             }
         ]
     }
