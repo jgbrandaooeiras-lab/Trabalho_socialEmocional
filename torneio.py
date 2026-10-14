@@ -46,7 +46,7 @@ def simular_partida(forca_a, forca_b, rng=random):
     dif = (forca_a - forca_b) / 100
     gols_a = _poisson(max(0.2, 1.3 + dif * 2), rng)
     gols_b = _poisson(max(0.2, 1.3 - dif * 2), rng)
-    return gols_a, gols_b
+    return min(gols_a, constantes.GOLS_MAX), min(gols_b, constantes.GOLS_MAX)
 
 
 def bonus_tecnico(tecnico):
@@ -56,6 +56,20 @@ def bonus_tecnico(tecnico):
     """
     media = sum(tecnico.values()) / len(tecnico)
     return (media - 50) * 0.3
+
+
+# Derrotas "de verdade": nada de 10 x 0. (gols do usuário, gols do adversário)
+PLACARES_DE_DERROTA = [(1, 2), (2, 3), (0, 3), (2, 4), (0, 1), (1, 3), (0, 2)]
+
+
+def placar_de_derrota(rng=random):
+    return rng.choice(PLACARES_DE_DERROTA)
+
+
+def time_em_ma_fase(tecnico, sequencia):
+    """Medidores baixos ou sem sequência de 2+ decisões assertivas -> o time perde."""
+    media = sum(tecnico.values()) / len(tecnico)
+    return media < constantes.MEDIA_BAIXA or sequencia < constantes.SEQUENCIA_MINIMA
 
 
 def jogo_do_usuario(jogos, time_usuario):
@@ -76,8 +90,11 @@ def numero_do_jogo_do_usuario(calendario, rodada, time_usuario):
     return sum(1 for jogos in calendario[:rodada] if jogo_do_usuario(jogos, time_usuario))
 
 
-def simular_rodada(jogos, forcas, time_usuario, tecnico, rng=random, acertos=0):
+def simular_rodada(jogos, forcas, time_usuario, tecnico, rng=random, acertos=0,
+                   forcar_derrota=False):
     """Simula os jogos com força sorteada; decisões assertivas favorecem o usuário.
+
+    Com forcar_derrota=True o time do usuário perde com um placar realista.
 
     Retorna (mandante, visitante, gols_mandante, gols_visitante, forca_casa,
     forca_fora, acertos) para cada partida.
@@ -97,6 +114,9 @@ def simular_rodada(jogos, forcas, time_usuario, tecnico, rng=random, acertos=0):
                 constantes.FORCA_MAX, sd.forca_efetiva(forca_v, acertos) + bonus))
             acertos_partida = acertos
         gols_m, gols_v = simular_partida(forca_m, forca_v, rng)
+        if forcar_derrota and time_usuario in (mandante, visitante):
+            meus, deles = placar_de_derrota(rng)
+            gols_m, gols_v = (meus, deles) if mandante == time_usuario else (deles, meus)
         resultados.append((mandante, visitante, gols_m, gols_v, forca_m, forca_v,
                            acertos_partida))
     return resultados

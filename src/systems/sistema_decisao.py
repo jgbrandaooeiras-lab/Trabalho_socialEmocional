@@ -24,6 +24,42 @@ def buscar_decisoes(decisoes, numero_partida):
     return [d for d in decisoes if d["id_partida"] == numero_partida]
 
 
+FLUXO_PADRAO = ("anuncio", "decisao", "resultado", "tabela")
+FLUXO_SEM_DECISAO = ("anuncio", "resultado", "tabela")
+
+
+def condicao_atendida(decisao, situacao):
+    """Confere o campo opcional "condicao" da decisão.
+
+    - sem "condicao" ou "senao": sempre vale (o "senao" é a alternativa da mesma partida)
+    - {"derrotas_acima_de": n, "fora_do_top": p}: vale se QUALQUER critério for verdadeiro
+    situacao = {"derrotas": int, "posicao": int}
+    """
+    condicao = decisao.get("condicao")
+    if condicao in (None, "senao"):
+        return True
+    if "derrotas_acima_de" in condicao and situacao["derrotas"] > condicao["derrotas_acima_de"]:
+        return True
+    if "fora_do_top" in condicao and situacao["posicao"] > condicao["fora_do_top"]:
+        return True
+    return False
+
+
+def escolher_decisao(decisoes, numero_partida, situacao):
+    """A decisão da partida: a primeira, na ordem do JSON, cuja condição é atendida."""
+    for decisao in buscar_decisoes(decisoes, numero_partida):
+        if condicao_atendida(decisao, situacao):
+            return decisao
+    return None
+
+
+def fluxo_da_rodada(decisao):
+    """Ordem das telas da rodada (campo "fluxo" do JSON ou o padrão)."""
+    if decisao is None:
+        return list(FLUXO_SEM_DECISAO)
+    return list(decisao.get("fluxo", FLUXO_PADRAO))
+
+
 def limitar(valor, minimo=0, maximo=100):
     return max(minimo, min(maximo, valor))
 
