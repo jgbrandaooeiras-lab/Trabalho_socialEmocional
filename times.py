@@ -2,23 +2,23 @@ import random
 from constantes import FORCA_MIN, FORCA_MAX
 # Dados dos times do campeonato.
 # - nome:   aparece nas telas, na classificação e no banco de dados
-# - escudo: arquivo dentro de assets/escudos/
+# - escudo: arquivo dentro de escudos.png/ (sem_fundo/ = gerado pelo remover_fundo.py)
 # - forca:  usada na simulação das partidas (quanto maior, mais chances de vencer)
 #
 # ATENÇÃO: a ordem desta lista define o calendário do torneio. Evite reordenar
 # ou remover times depois que já existirem saves.
 TIMES = [
-    {"nome": "Atlético-MG",  "escudo": "AtleticoMineiro.png",    "forca": 75},
-    {"nome": "Athletico-PR", "escudo": "AtleticoParanaense.png", "forca": 70},
-    {"nome": "Bahia",        "escudo": "Bahia.png",              "forca": 68},
-    {"nome": "Coritiba",     "escudo": "Coritiba.png",           "forca": 60},
-    {"nome": "Flamengo",     "escudo": "flamengo.png",           "forca": 82},
-    {"nome": "Grêmio",       "escudo": "Gremio.png",             "forca": 72},
-    {"nome": "Palmeiras",    "escudo": "Palmeiras.jpg",          "forca": 80},
-    {"nome": "São Paulo",    "escudo": "SaoPaulo.png",           "forca": 71},
-    {"nome": "Vasco",        "escudo": "Vasco.png",              "forca": 65}
-    # 9º time: adicione aqui (e o escudo em assets/escudos/). Com 9 times o torneio
-    # passa a ter 9 rodadas e cada time joga 8 partidas (uma rodada de folga cada).
+    {"nome": "Atlético-MG",  "escudo": "sem_fundo/AtleticoMineiro.png", "forca": 75},
+    {"nome": "Athletico-PR", "escudo": "sem_fundo/AtleticoParanaense.png", "forca": 70},
+    {"nome": "Bahia",        "escudo": "sem_fundo/Bahia.png", "forca": 68},
+    {"nome": "Coritiba",     "escudo": "sem_fundo/Coritiba.png", "forca": 60},
+    {"nome": "Flamengo",     "escudo": "sem_fundo/flamengo.png", "forca": 82},
+    {"nome": "Grêmio",       "escudo": "sem_fundo/Gremio.png", "forca": 72},
+    {"nome": "Palmeiras",    "escudo": "sem_fundo/Palmeiras.png", "forca": 80},
+    {"nome": "São Paulo",    "escudo": "sem_fundo/SaoPaulo.png", "forca": 71},
+    {"nome": "Vasco",        "escudo": "sem_fundo/vasco.png", "forca": 65},
+    {"nome": "Corinthians",  "escudo": "sem_fundo/corinthians.png", "forca": 74},
+    # Com 10 times (número par) ninguém folga: são 9 rodadas e o usuário joga todas.
 ]
 
 

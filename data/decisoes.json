@@ -3,6 +3,8 @@
         "id": "d01",
         "cenario": "vestiario",
         "id_partida": 1,
+        "fluxo": ["anuncio", "resultado", "decisao", "tabela"],
+        "resultado": "derrota",
         "texto": "Seu time perdeu a estreia e o clima no vestiário está pesado",
         "opcoes": [
             {
@@ -13,17 +15,17 @@
             {
                 "texto": "Culpar a defesa publicamente",
                 "assertiva": false,
-                "efeitos": {"relacionamento": -15, "estabilidade": -5, "reputacao": 5}
+                "efeitos": {"relacionamento": -15, "estabilidade": -5, "reputacao": 0}
             },
             {
-                "texto":"Ignorar perguntas e desviar do assunto",
+                "texto": "Ignorar perguntas e desviar do assunto",
                 "assertiva": false,
-                "efeitos":{"relacionamento": 5, "estabilidade": 0, "reputacao":-5} 
+                "efeitos": {"relacionamento": 5, "estabilidade": 0, "reputacao": -5}
             },
             {
                 "texto": "Defender a defesa do time na coletiva",
                 "assertiva": false,
-                "efeitos":{"relacionamento":15, "estabilidade": 5, "reputacao":-5}
+                "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": -5}
             }
         ]
     },
@@ -31,27 +33,28 @@
         "id": "d02",
         "cenario": "campo",
         "id_partida": 2,
+        "fluxo": ["anuncio", "decisao", "resultado", "tabela"],
         "texto": "Seu atacante perdeu um pênalti decisivo",
         "opcoes": [
             {
                 "texto": "Conversar em particular",
                 "assertiva": true,
-                "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 0}
+                "efeitos": {"relacionamento": 15, "estabilidade": 5, "reputacao": 0}
             },
             {
                 "texto": "Criticar na frente do elenco",
                 "assertiva": false,
-                "efeitos": {"relacionamento": -15, "estabilidade": -5, "reputacao": 5}
+                "efeitos": {"relacionamento": -15, "estabilidade": -5, "reputacao": 0}
             },
             {
                 "texto": "Botar o jogador no banco no próximo jogo",
                 "assertiva": false,
-                "efeitos":{"relacionamento":-5, "estabilidade":0, "reputacao":10}
+                "efeitos": {"relacionamento": -5, "estabilidade": 5, "reputacao": 10}
             },
             {
                 "texto": "Omitir o assunto",
-                "assertiva":false,
-                "efeitos":{"relacionamento":0, "estabilidade":-5, "reputacao":0}
+                "assertiva": false,
+                "efeitos": {"relacionamento": 0, "estabilidade": -5, "reputacao": -10}
             }
         ]
     },
@@ -59,27 +62,29 @@
         "id": "d03",
         "cenario": "coletiva",
         "id_partida": 3,
+        "fluxo": ["anuncio", "resultado", "decisao", "tabela"],
+        "resultado": "derrota",
         "texto": "Após a derrota, um repórter pergunta na coletiva se você vai continuar no cargo",
         "opcoes": [
             {
                 "texto": "Responder com calma e falar do trabalho que está sendo feito",
                 "assertiva": true,
-                "efeitos": {"relacionamento": 5, "estabilidade": 5, "reputacao": 5}
+                "efeitos": {"relacionamento": 5, "estabilidade": 5, "reputacao": 10}
             },
             {
                 "texto": "Perder a paciência e rebater o repórter",
                 "assertiva": false,
-                "efeitos": {"relacionamento": -5, "estabilidade": -10, "reputacao": -10}
+                "efeitos": {"relacionamento": -5, "estabilidade": -10, "reputacao": -15}
             },
             {
                 "texto": "Culpar a arbitragem",
                 "assertiva": false,
-                "efeitos": {"relacionamento": -5, "estabilidade": 0, "reputacao": 5}
+                "efeitos": {"relacionamento": 0, "estabilidade": 0, "reputacao": 5}
             },
             {
-                "texto":"Fazer uma piada zombando da pergunta",
-                "assertiva":false,
-                "efeitos":{"relacionamento":0, "estabilidade":-5, "reputacao":-15}
+                "texto": "Fazer uma piada zombando da pergunta",
+                "assertiva": false,
+                "efeitos": {"relacionamento": 0, "estabilidade": -5, "reputacao": -15}
             }
         ]
     },
@@ -87,17 +92,18 @@
         "id": "d04",
         "cenario": "campo",
         "id_partida": 4,
+        "fluxo": ["anuncio", "decisao", "resultado", "tabela"],
         "texto": "Dois jogadores brigaram em campo e um deles foi expulso, deixando o time com um a menos",
         "opcoes": [
             {
                 "texto": "Ouvir os dois separadamente e definir uma punição justa",
                 "assertiva": true,
-                "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 0}
+                "efeitos": {"relacionamento": 5, "estabilidade": 10, "reputacao": 0}
             },
             {
                 "texto": "Afastar os dois do elenco sem conversar",
                 "assertiva": false,
-                "efeitos": {"relacionamento": -15, "estabilidade": 0, "reputacao": 5}
+                "efeitos": {"relacionamento": -10, "estabilidade": 0, "reputacao": 5}
             },
             {
                 "texto": "Ignorar o caso para não desgastar o grupo",
@@ -105,9 +111,9 @@
                 "efeitos": {"relacionamento": -5, "estabilidade": -5, "reputacao": -5}
             },
             {
-                "texto":"Rescindir o contrato dos dois jogadores",
-                "assertiva":false,
-                "efeitos":{"relacionamento":-20, "estabilidade":-15, "reputacao":-10}
+                "texto": "Rescindir o contrato dos dois jogadores",
+                "assertiva": false,
+                "efeitos": {"relacionamento": -20, "estabilidade": -15, "reputacao": -10}
             }
         ]
     },
@@ -115,12 +121,13 @@
         "id": "d05",
         "cenario": "coletiva",
         "id_partida": 5,
+        "fluxo": ["coletiva", "decisao", "anuncio", "resultado", "tabela"],
         "texto": "Um jogador reserva reclama na imprensa que não está recebendo oportunidades",
         "opcoes": [
             {
                 "texto": "Chamá-lo para uma conversa e explicar os critérios de escalação",
                 "assertiva": true,
-                "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 0}
+                "efeitos": {"relacionamento": 5, "estabilidade": 5, "reputacao": 0}
             },
             {
                 "texto": "Responder publicamente e expor o desempenho dele",
@@ -128,14 +135,14 @@
                 "efeitos": {"relacionamento": -15, "estabilidade": -5, "reputacao": 5}
             },
             {
-                "texto":"Colocar o jogador no time",
-                "assertiva":false,
-                "efeitos":{"relacionamento":10, "estabilidade":5, "reputacao":0}
+                "texto": "Colocar o jogador no time",
+                "assertiva": false,
+                "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 0}
             },
             {
-                "texto":"Ignorar o jogador",
-                "assertiva":false,
-                "efeitos":{"relacionamento":-10, "estabilidade":-10, "reputacao":5}
+                "texto": "Ignorar o jogador",
+                "assertiva": false,
+                "efeitos": {"relacionamento": -10, "estabilidade": -10, "reputacao": 5}
             }
         ]
     },
@@ -143,6 +150,8 @@
         "id": "d06",
         "cenario": "vestiario",
         "id_partida": 6,
+        "condicao": {"derrotas_acima_de": 3, "fora_do_top": 3},
+        "fluxo": ["anuncio", "decisao", "resultado", "tabela"],
         "texto": "A diretoria diz que o resultado precisa melhorar ou você pode ser demitido",
         "opcoes": [
             {
@@ -161,9 +170,39 @@
                 "efeitos": {"relacionamento": -5, "estabilidade": -5, "reputacao": -10}
             },
             {
-                "texto":"Pedir reforços para a diretoria",
+                "texto": "Pedir reforços para a diretoria",
                 "assertiva": false,
-                "efeitos":{"relacionamento":0, "estabilidade":5, "reputacao":10}
+                "efeitos": {"relacionamento": 0, "estabilidade": 5, "reputacao": 10}
+            }
+        ]
+    },
+    {
+        "id": "d06b",
+        "cenario": "vestiario",
+        "id_partida": 6,
+        "condicao": "senao",
+        "fluxo": ["anuncio", "decisao", "resultado", "tabela"],
+        "texto": "Jogador causou um pênalti para o time adversário em momento decisivo da partida:",
+        "opcoes": [
+            {
+                "texto": "Ficar quieto na beira do campo e não fazer nada",
+                "assertiva": false,
+                "efeitos": {"relacionamento": 0, "estabilidade": 5, "reputacao": 0}
+            },
+            {
+                "texto": "Xingar o jogador que causou o pênalti",
+                "assertiva": false,
+                "efeitos": {"relacionamento": -10, "estabilidade": -15, "reputacao": -5}
+            },
+            {
+                "texto": "Pedir calma à equipe e orientar o goleiro",
+                "assertiva": true,
+                "efeitos": {"relacionamento": 10, "estabilidade": 15, "reputacao": 10}
+            },
+            {
+                "texto": "Xingar o juiz e acusar de roubo",
+                "assertiva": false,
+                "efeitos": {"relacionamento": 5, "estabilidade": -10, "reputacao": -15}
             }
         ]
     },
@@ -171,12 +210,13 @@
         "id": "d07",
         "cenario": "vestiario",
         "id_partida": 7,
+        "fluxo": ["anuncio", "decisao", "resultado", "tabela"],
         "texto": "Jogo decisivo: seu melhor jogador está cansado mas o time depende dele",
         "opcoes": [
             {
                 "texto": "Poupá-lo e apostar no jogador reserva",
                 "assertiva": false,
-                "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": -5}
+                "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 0}
             },
             {
                 "texto": "Escalá-lo mesmo assim, arriscando lesão",
@@ -189,16 +229,18 @@
                 "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 5}
             },
             {
-                "texto":"Deixar no banco e colocá-lo no decorrer da partida",
-                "assertiva":false,
-                "efeitos":{"relacionamento":5, "estabilidade":5, "reputacao":5}
+                "texto": "Deixar no banco e colocá-lo no decorrer da partida",
+                "assertiva": false,
+                "efeitos": {"relacionamento": 5, "estabilidade": 5, "reputacao": 5}
             }
         ]
     },
     {
         "id": "d08",
         "cenario": "campo",
-        "id_partida": 7,
+        "id_partida": 8,
+        "condicao": {"fora_do_top": 5},
+        "fluxo": ["decisao", "anuncio", "resultado", "tabela"],
         "texto": "Na véspera da última rodada, a torcida protesta na porta do centro de treinamento",
         "opcoes": [
             {
@@ -217,9 +259,39 @@
                 "efeitos": {"relacionamento": -10, "estabilidade": -5, "reputacao": 5}
             },
             {
-                "texto":"Xingar a torcida",
-                "assertiva":false,
-                "efeitos":{"relacionamento":-10, "estabilidade":-15, "reputacao":-20}
+                "texto": "Xingar a torcida",
+                "assertiva": false,
+                "efeitos": {"relacionamento": -10, "estabilidade": -15, "reputacao": -20}
+            }
+        ]
+    },
+    {
+        "id": "d08b",
+        "cenario": "campo",
+        "id_partida": 8,
+        "condicao": "senao",
+        "fluxo": ["anuncio", "decisao", "resultado", "tabela"],
+        "texto": "No último lance do jogo, com o jogo empatado, o goleiro vai para o ataque durante um escanteio decisivo:",
+        "opcoes": [
+            {
+                "texto": "Reforçar o posicionamento da zaga.",
+                "assertiva": true,
+                "efeitos": {"relacionamento": 5, "estabilidade": 10, "reputacao": 5}
+            },
+            {
+                "texto": "Ficar quieto e deixar ele ir.",
+                "assertiva": false,
+                "efeitos": {"relacionamento": 5, "estabilidade": 5, "reputacao": -10}
+            },
+            {
+                "texto": "Ameaçar de tirar ele do time.",
+                "assertiva": false,
+                "efeitos": {"relacionamento": -10, "estabilidade": -10, "reputacao": 10}
+            },
+            {
+                "texto": "Mandar ele voltar para o gol",
+                "assertiva": false,
+                "efeitos": {"relacionamento": -5, "estabilidade": 5, "reputacao": 5}
             }
         ]
     }

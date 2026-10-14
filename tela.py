@@ -144,12 +144,17 @@ class Botao:
 
 # ---------------------------------------------------------------- jogo
 class Game:
-    """Máquina de estados: menu -> escolher_time -> prejogo -> decisao -> feedback
-    -> resultado -> (próxima rodada...) -> fim."""
+    """Máquina de estados: menu -> escolher_time -> etapas da rodada -> ... -> fim.
+
+    Cada rodada é uma lista de etapas (anuncio, coletiva, decisao, resultado, tabela)
+    definida pelo campo "fluxo" da decisão no decisoes.json. A tela de configurações
+    (ESC ou botão CONFIG) abre por cima de qualquer estado.
+    """
 
     def __init__(self):
         pygame.init()
-        self.tela = pygame.display.set_mode((LARGURA, ALTURA))
+        # SCALED: em tela cheia a imagem é ampliada mantendo a proporção (e o mouse continua certo)
+        self.tela = pygame.display.set_mode((LARGURA, ALTURA), pygame.SCALED)
         pygame.display.set_caption(constantes.TITULO)
         self.clock = pygame.time.Clock()
         self.esta_rodando = True
@@ -162,11 +167,14 @@ class Game:
         self.fonte_placar = pygame.font.SysFont(fonte, 72, bold=True)
 
         self.carregar_assets()
+        self.iniciar_musica()
         self.decisoes = sd.carregar_decisoes()
         self.calendario = torneio.gerar_calendario(nomes_dos_times())
         self.forcas = forcas_dos_times()
 
         self.botoes = []
+        self.config_aberta = False
+        self.botoes_config = []
         self.ir_para("menu")
 
     def carregar_assets(self):
@@ -180,6 +188,8 @@ class Game:
 
         self.escurecer = pygame.Surface((LARGURA, ALTURA), pygame.SRCALPHA)
         self.escurecer.fill((0, 0, 0, 120))
+        self.escurecer_forte = pygame.Surface((LARGURA, ALTURA), pygame.SRCALPHA)
+        self.escurecer_forte.fill((0, 0, 0, 170))
 
         tecnico = carregar_imagem("TÉCNICO(UM POUCO INSPIRADO).png")
         jogador = carregar_imagem("JOGADORBARATO.png")
@@ -190,8 +200,11 @@ class Game:
             pygame.display.set_icon(tecnico)
         logo = carregar_imagem("KASEL.png")
         self.img_logo = pygame.transform.scale(logo, (96, 96)) if logo else None
+        reporter = carregar_imagem("sem_fundo/vorcaro.png")
+        self.img_reporter = caber(reporter, 256) if reporter else None
+        self.img_reporter_grande = caber(reporter, 400) if reporter else None
 
-        self.escudos_grandes, self.escudos_medios, self.escudos_pequenos = {}, {}, {}
+        self.escudos_grandes, self.escudos_medios, self.escudos_pequenos, self.escudos_mini = {}, {}, {}, {}
         for time in TIMES:
             img = carregar_imagem(time["escudo"], PASTA_ESCUDOS)
             if img is None:
@@ -199,6 +212,7 @@ class Game:
             self.escudos_grandes[time["nome"]] = caber(img, 160)
             self.escudos_medios[time["nome"]] = caber(img, 96)
             self.escudos_pequenos[time["nome"]] = caber(img, 36)
+            self.escudos_mini[time["nome"]] = caber(img, 26)
 
     def escudo_generico(self, nome):
         img = pygame.Surface((160, 160), pygame.SRCALPHA)
@@ -206,17 +220,45 @@ class Game:
         texto(img, nome[:3].upper(), self.fonte_h2, COR_BORDA, (78, 78), "center")
         return img
 
+    def iniciar_musica(self):
+        """Toca audio/audiojogo.* em loop até o jogo fechar (se houver som disponível)."""
+        self.volume = constantes.VOLUME_INICIAL
+        self.tem_musica = False
+        arquivo = next(iter(sorted(constantes.PASTA_AUDIO.glob("audiojogo.*"))), None)
+        if arquivo is None:
+            return
+        try:
+            if not pygame.mixer.get_init():
+                pygame.mixer.init()
+            pygame.mixer.music.load(str(arquivo))
+            pygame.mixer.music.set_volume(self.volume)
+            pygame.mixer.music.play(-1)
+            self.tem_musica = True
+        except pygame.error:
+            pass
+
     # ------------------------------------------------------------ infraestrutura
     def ir_para(self, estado):
         self.estado = estado
         self.botoes = []
         getattr(self, f"montar_{estado}")()
+        if estado != "menu":
+            self.botoes.append(Botao((LARGURA - 164, 20, 140, 48), "CONFIG", ("abrir_config",), self.fonte))
 
     def eventos(self):
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 self.esta_rodando = False
-            for botao in self.botoes:
+            if evento.type == pygame.KEYDOWN and evento.key == pygame.K_F11:
+                self.acao_tela_cheia()
+                continue
+            if evento.type == pygame.KEYDOWN and evento.key == pygame.K_ESCAPE:
+                if self.config_aberta:
+                    self.acao_fechar_config()
+                else:
+                    self.acao_abrir_config()
+                continue
+            for botao in (self.botoes_config if self.config_aberta else self.botoes):
                 if botao.foi_clicado(evento):
                     nome, *args = botao.acao
                     getattr(self, f"acao_{nome}")(*args)
@@ -226,7 +268,11 @@ class Game:
         getattr(self, f"desenhar_{self.estado}")()
         mouse = pygame.mouse.get_pos()
         for botao in self.botoes:
-            botao.desenhar(self.tela, mouse)
+            botao.desenhar(self.tela, (-1, -1) if self.config_aberta else mouse)
+        if self.config_aberta:
+            self.desenhar_config()
+            for botao in self.botoes_config:
+                botao.desenhar(self.tela, mouse)
         pygame.display.flip()
 
     def rodar(self):
@@ -264,22 +310,77 @@ class Game:
                 pygame.draw.rect(self.tela, COR_SOMBRA, bloco.move(2, 2))
                 pygame.draw.rect(self.tela, cor if b < cheios else COR_VAZIO, bloco)
 
-    def desenhar_personagens(self):
+    def desenhar_personagens(self, cenario="campo"):
+        """Técnico à esquerda; à direita o jogador, ou o repórter na coletiva."""
         y = ALTURA - 330
-        for img, rotulo, x in ((self.img_tecnico, "TÉCNICO", 24),
-                               (self.img_jogador, "JOGADOR", LARGURA - 280)):
+        direita = (self.img_reporter, "REPÓRTER") if cenario == "coletiva" else (self.img_jogador, "JOGADOR")
+        for img, rotulo, x in ((self.img_tecnico, "TÉCNICO", 24), (*direita, LARGURA - 280)):
             if img:
-                self.tela.blit(img, (x, y))
+                self.tela.blit(img, img.get_rect(midbottom=(x + 128, y + 256)))
             placa = pygame.Rect(x + 38, y + 262, 180, 40)
             caixa_pixel(self.tela, placa, COR_CAIXA, COR_DESTAQUE, p=3)
             texto(self.tela, rotulo, self.fonte, COR_DESTAQUE, placa.center, "center")
+
+    # ------------------------------------------------------------ configurações
+    def painel_config(self):
+        painel = pygame.Rect(0, 0, 560, 500)
+        painel.center = (LARGURA // 2, ALTURA // 2)
+        return painel
+
+    def acao_abrir_config(self):
+        self.config_aberta = True
+        painel = self.painel_config()
+        cx = painel.centerx
+        self.botoes_config = [
+            Botao((painel.x + 40, painel.y + 116, 64, 56), "-", ("volume", -0.1), self.fonte_h2),
+            Botao((painel.right - 104, painel.y + 116, 64, 56), "+", ("volume", 0.1), self.fonte_h2),
+            Botao((cx - 180, painel.y + 204, 360, 56), "CONTINUAR", ("fechar_config",), self.fonte),
+            Botao((cx - 180, painel.y + 272, 360, 56), "TELA CHEIA (F11)", ("tela_cheia",), self.fonte),
+        ]
+        if self.estado != "menu":
+            self.botoes_config.append(
+                Botao((cx - 180, painel.y + 340, 360, 56), "MENU INICIAL", ("menu_inicial",), self.fonte))
+        self.botoes_config.append(
+            Botao((cx - 180, painel.y + 408, 360, 56), "SAIR DO JOGO", ("sair",), self.fonte))
+
+    def desenhar_config(self):
+        self.tela.blit(self.escurecer_forte, (0, 0))
+        painel = self.painel_config()
+        caixa_pixel(self.tela, painel, p=6)
+        texto(self.tela, "CONFIGURAÇÕES", self.fonte_h2, COR_DESTAQUE, (painel.centerx, painel.y + 24), "midtop")
+        rotulo = f"VOLUME {round(self.volume * 100)}%" if self.tem_musica else "MÚSICA INDISPONÍVEL"
+        texto(self.tela, rotulo, self.fonte, COR_BORDA, (painel.centerx, painel.y + 80), "midtop")
+        x0, largura = painel.x + 124, painel.w - 248
+        bw = (largura - 9 * 4) // 10
+        cheios = round(self.volume * 10)
+        for b in range(10):
+            bloco = pygame.Rect(x0 + b * (bw + 4), painel.y + 126, bw, 36)
+            pygame.draw.rect(self.tela, COR_SOMBRA, bloco.move(2, 2))
+            pygame.draw.rect(self.tela, COR_DESTAQUE if b < cheios else COR_VAZIO, bloco)
+
+    def acao_volume(self, delta):
+        self.volume = round(max(0.0, min(1.0, self.volume + delta)), 1)
+        if self.tem_musica:
+            pygame.mixer.music.set_volume(self.volume)
+
+    def acao_tela_cheia(self):
+        pygame.display.toggle_fullscreen()
+
+    def acao_fechar_config(self):
+        self.config_aberta = False
+        self.botoes_config = []
+
+    def acao_menu_inicial(self):
+        self.acao_fechar_config()
+        self.ir_para("menu")
 
     # ------------------------------------------------------------ menu
     def montar_menu(self):
         cx = LARGURA // 2
         self.botoes = [
-            Botao((cx - 170, 400, 340, 70), "NOVO JOGO", ("ir", "escolher_time"), self.fonte_h2),
-            Botao((cx - 170, 490, 340, 70), "SAIR", ("sair",), self.fonte_h2),
+            Botao((cx - 170, 390, 340, 66), "NOVO JOGO", ("ir", "escolher_time"), self.fonte_h2),
+            Botao((cx - 170, 470, 340, 66), "CONFIGURAÇÕES", ("abrir_config",), self.fonte_h2),
+            Botao((cx - 170, 550, 340, 66), "SAIR", ("sair",), self.fonte_h2),
         ]
 
     def desenhar_menu(self):
@@ -329,34 +430,62 @@ class Game:
         self.rodada = 1
         self.total_decisoes = 0
         self.total_assertivas = 0
+        self.sequencia = 0  # decisões assertivas seguidas
         self.iniciar_rodada()
 
-    # ------------------------------------------------------------ rodada
+    # ------------------------------------------------------------ rodada (etapas)
     def iniciar_rodada(self):
         if self.rodada > len(self.calendario):
             self.ir_para("fim")
             return
         self.jogos = self.calendario[self.rodada - 1]
         self.jogo_usuario = torneio.jogo_do_usuario(self.jogos, self.time_usuario)
+        mandante, visitante = self.jogo_usuario
+        self.adversario = visitante if mandante == self.time_usuario else mandante
         self.numero_partida = torneio.numero_do_jogo_do_usuario(self.calendario, self.rodada, self.time_usuario)
-        self.fila_decisoes = sd.buscar_decisoes(self.decisoes, self.numero_partida) if self.numero_partida else []
-        self.acertos = 0
-        self.ir_para("prejogo")
+        situacao = {"derrotas": self.tabela[self.time_usuario]["d"], "posicao": self.posicao_usuario()}
+        self.decisao_rodada = sd.escolher_decisao(self.decisoes, self.numero_partida, situacao)
+        self.etapas = sd.fluxo_da_rodada(self.decisao_rodada)
+        self.resultados = None
+        self.avancar()
 
-    def montar_prejogo(self):
-        rotulo = "ENTRAR EM CAMPO" if self.jogo_usuario else "VER A RODADA"
-        self.botoes = [Botao((LARGURA // 2 - 180, ALTURA - 100, 360, 64), rotulo, ("comecar_partida",), self.fonte_h2)]
+    def avancar(self):
+        """Vai para a próxima etapa da rodada; sem etapas, começa a próxima rodada."""
+        if not self.etapas:
+            self.rodada += 1
+            self.iniciar_rodada()
+            return
+        etapa = self.etapas.pop(0)
+        if etapa == "decisao":
+            self.decisao_atual = self.decisao_rodada
+            self.ir_para("decisao")
+        elif etapa == "resultado":
+            self.simular()
+        else:  # anuncio, coletiva, tabela
+            self.ir_para(etapa)
 
-    def desenhar_prejogo(self):
+    def acao_avancar(self):
+        self.avancar()
+
+    def botao_avancar(self, rect=(LARGURA - 344, ALTURA - 84, 320, 64)):
+        """Botão que leva à próxima etapa, com o rótulo de acordo com ela."""
+        rotulos = {"resultado": "JOGAR PARTIDA", "tabela": "VER TABELA"}
+        if self.etapas:
+            rotulo = rotulos.get(self.etapas[0], "CONTINUAR")
+        else:
+            rotulo = "RESULTADO FINAL" if self.rodada >= len(self.calendario) else "PRÓXIMA RODADA"
+        self.botoes.append(Botao(rect, rotulo, ("avancar",), self.fonte_h2))
+
+    # ------------------------------------------------------------ anúncio da partida
+    def montar_anuncio(self):
+        self.botao_avancar((LARGURA // 2 - 180, ALTURA - 100, 360, 64))
+
+    def desenhar_anuncio(self):
         self.fundo("campo")
         self.caixa_titulo(f"RODADA {self.rodada} DE {len(self.calendario)}")
         caixa = pygame.Rect(0, 110, 860, 400)
         caixa.centerx = LARGURA // 2
         caixa_pixel(self.tela, caixa, p=6)
-
-        if not self.jogo_usuario:
-            texto(self.tela, "SEU TIME FOLGA NESTA RODADA", self.fonte_h2, COR_DESTAQUE, caixa.center, "center")
-            return
 
         mandante, visitante = self.jogo_usuario
         for nome, cx in ((mandante, caixa.x + 200), (visitante, caixa.right - 200)):
@@ -365,22 +494,44 @@ class Game:
             cor = COR_DESTAQUE if nome == self.time_usuario else COR_BORDA
             texto(self.tela, nome.upper(), self.fonte_h2, cor, (cx, caixa.y + 250), "midtop")
         texto(self.tela, "VS", self.fonte_placar, COR_DESTAQUE, (caixa.centerx, caixa.y + 150), "center")
-        texto(self.tela, f"Partida {self.numero_partida} do seu time", self.fonte, COR_BORDA,
+        texto(self.tela, f"Seu adversário: {self.adversario}", self.fonte, COR_BORDA,
               (caixa.centerx, caixa.y + 310), "midtop")
-        n = len(self.fila_decisoes)
-        aviso = f"{n} decisão(ões) te esperam nesta partida" if n else "Nenhuma decisão nesta partida"
-        texto(self.tela, aviso, self.fonte_pequena, COR_DESTAQUE, (caixa.centerx, caixa.y + 346), "midtop")
+        cor = constantes.VERDE if self.sequencia >= constantes.SEQUENCIA_MINIMA else constantes.AMARELO
+        texto(self.tela, f"Sequência de decisões assertivas: {self.sequencia}", self.fonte_pequena, cor,
+              (caixa.centerx, caixa.y + 346), "midtop")
         self.desenhar_medidores(caixa.x + 40, caixa.bottom + 20, caixa.w - 80)
 
-    def acao_comecar_partida(self):
-        self.proxima_decisao_ou_simular()
+    # ------------------------------------------------------------ coletiva de imprensa
+    def montar_coletiva(self):
+        self.botao_avancar()
 
-    def proxima_decisao_ou_simular(self):
-        if self.fila_decisoes:
-            self.decisao_atual = self.fila_decisoes.pop(0)
-            self.ir_para("decisao")
-        else:
-            self.simular()
+    def desenhar_coletiva(self):
+        self.fundo("coletiva")
+        self.caixa_titulo("COLETIVA DE IMPRENSA")
+        if self.img_reporter_grande:
+            img_r = self.img_reporter_grande.get_rect(bottomleft=(60, ALTURA - 80))
+            self.tela.blit(self.img_reporter_grande, img_r)
+            placa = pygame.Rect(0, 0, 200, 40)
+            placa.midtop = (img_r.centerx, img_r.bottom + 10)
+            caixa_pixel(self.tela, placa, COR_CAIXA, COR_DESTAQUE, p=3)
+            texto(self.tela, "REPÓRTER", self.fonte, COR_DESTAQUE, placa.center, "center")
+
+        fala = pygame.Rect(500, 120, LARGURA - 540, 400)
+        caixa_pixel(self.tela, fala, p=6)
+        texto(self.tela, "AO VIVO DA SALA DE IMPRENSA", self.fonte, COR_DESTAQUE,
+              (fala.centerx, fala.y + 24), "midtop")
+        discurso = (f"Boa tarde a todos! Estamos ao vivo do centro de treinamento do {self.time_usuario}. "
+                    f"Antes do confronto contra o {self.adversario}, o técnico vai encarar as perguntas "
+                    "da imprensa. A pressão é grande e cada palavra pode mudar o clima no clube. "
+                    "Vamos à primeira pergunta!")
+        y = fala.y + 70
+        for linha in quebrar(discurso, self.fonte, fala.w - 60):
+            texto(self.tela, linha, self.fonte, COR_BORDA, (fala.x + 30, y))
+            y += self.fonte.get_linesize() + 4
+        esc_meu, esc_adv = self.escudos_medios[self.time_usuario], self.escudos_medios[self.adversario]
+        self.tela.blit(esc_meu, esc_meu.get_rect(center=(fala.centerx - 120, fala.bottom - 70)))
+        self.tela.blit(esc_adv, esc_adv.get_rect(center=(fala.centerx + 120, fala.bottom - 70)))
+        texto(self.tela, "VS", self.fonte_h2, COR_DESTAQUE, (fala.centerx, fala.bottom - 70), "center")
 
     # ------------------------------------------------------------ decisão
     def area_central(self):
@@ -398,7 +549,7 @@ class Game:
             n = len(quebrar(opcao["texto"], self.fonte, centro.w - 90))
             h = max(66, n * lh + 30)
             self.botoes.append(Botao((centro.x, y, centro.w, h), opcao["texto"], ("escolher", i),
-                                     self.fonte, letra="ABC"[i]))
+                                     self.fonte, letra="ABCDEFGH"[i]))
             y += h + 16
 
     def desenhar_cena(self):
@@ -409,20 +560,20 @@ class Game:
         texto(self.tela, NOMES_CENARIO.get(cenario, cenario.upper()), self.fonte, COR_DESTAQUE, tag.center, "center")
 
         mandante, visitante = self.jogo_usuario
-        placa = pygame.Rect(LARGURA - 274, 20, 250, 48)
+        placa = pygame.Rect(LARGURA - 434, 20, 250, 48)
         caixa_pixel(self.tela, placa, COR_CAIXA, COR_BORDA, p=3)
         self.tela.blit(self.escudos_pequenos[mandante], (placa.x + 14, placa.y + 6))
         self.tela.blit(self.escudos_pequenos[visitante], (placa.right - 50, placa.y + 6))
         texto(self.tela, "VS", self.fonte, COR_DESTAQUE, placa.center, "center")
 
-        self.desenhar_personagens()
+        self.desenhar_personagens(cenario)
         centro = self.area_central()
         self.desenhar_medidores(centro.x, ALTURA - 64, centro.w)
 
     def desenhar_decisao(self):
         self.desenhar_cena()
         caixa_pixel(self.tela, self.rect_pergunta, p=6)
-        texto(self.tela, f"PARTIDA {self.numero_partida}", self.fonte_pequena, COR_DESTAQUE,
+        texto(self.tela, f"DECISÃO {self.numero_partida}", self.fonte_pequena, COR_DESTAQUE,
               (self.rect_pergunta.centerx, self.rect_pergunta.y + 14), "midtop")
         y = self.rect_pergunta.y + 42
         for linha in self.linhas_pergunta:
@@ -437,13 +588,15 @@ class Game:
         self.opcao_escolhida = opcao
         self.total_decisoes += 1
         if opcao.get("assertiva"):
-            self.acertos += 1
             self.total_assertivas += 1
+            self.sequencia += 1
+        else:
+            self.sequencia = 0
         self.ir_para("feedback")
 
     def montar_feedback(self):
         centro = self.area_central()
-        self.botoes = [Botao((centro.centerx - 150, 412, 300, 64), "CONTINUAR", ("continuar",), self.fonte_h2)]
+        self.botao_avancar((centro.centerx - 160, 412, 320, 64))
 
     def desenhar_feedback(self):
         self.desenhar_cena()
@@ -465,17 +618,18 @@ class Game:
             cor = constantes.VERDE if d > 0 else constantes.VERMELHO if d < 0 else COR_BORDA
             texto(self.tela, f"{ROTULOS[medidor]}: {d:+d}", self.fonte, cor, (caixa.centerx, y), "midtop")
             y += self.fonte.get_linesize() + 4
-        if assertiva:
-            texto(self.tela, f"+{constantes.BONUS_POR_ACERTO} de força para o time nesta partida",
-                  self.fonte_pequena, COR_DESTAQUE, (caixa.centerx, y + 8), "midtop")
-
-    def acao_continuar(self):
-        self.proxima_decisao_ou_simular()
+        texto(self.tela, f"Sequência de decisões assertivas: {self.sequencia}",
+              self.fonte_pequena, COR_DESTAQUE, (caixa.centerx, y + 8), "midtop")
 
     # ------------------------------------------------------------ simulação e resultado
     def simular(self):
-        self.resultados = torneio.simular_rodada(self.jogos, self.forcas, self.time_usuario,
-                                                 self.tecnico, acertos=self.acertos)
+        """Medidores baixos, sem sequência de 2+ acertos ou derrota roteirizada (campo
+        "resultado" do JSON) -> o time perde. Senão a sequência dá bônus de força."""
+        forcar_derrota = ((self.decisao_rodada or {}).get("resultado") == "derrota"
+                          or torneio.time_em_ma_fase(self.tecnico, self.sequencia))
+        self.resultados = torneio.simular_rodada(
+            self.jogos, self.forcas, self.time_usuario, self.tecnico,
+            acertos=min(self.sequencia, constantes.SEQUENCIA_MAXIMA), forcar_derrota=forcar_derrota)
         for mandante, visitante, gm, gv, *_ in self.resultados:
             for nome, gp, gc in ((mandante, gm, gv), (visitante, gv, gm)):
                 t = self.tabela[nome]
@@ -496,73 +650,80 @@ class Game:
         return sorted(self.tabela.items(),
                       key=lambda kv: (kv[1]["pts"], kv[1]["gp"] - kv[1]["gc"], kv[1]["gp"]), reverse=True)
 
+    def posicao_usuario(self):
+        return [nome for nome, _ in self.classificacao()].index(self.time_usuario) + 1
+
     def montar_resultado(self):
-        ultima = self.rodada >= len(self.calendario)
-        rotulo = "RESULTADO FINAL" if ultima else "PRÓXIMA RODADA"
-        self.botoes = [Botao((LARGURA - 344, ALTURA - 84, 320, 64), rotulo, ("proxima_rodada",), self.fonte_h2)]
+        self.botao_avancar()
 
     def desenhar_resultado(self):
         self.fundo("campo")
-        self.caixa_titulo(f"RODADA {self.rodada} - RESULTADOS", y=12)
+        self.caixa_titulo(f"RODADA {self.rodada} - RESULTADO", y=12)
 
         topo = pygame.Rect(0, 82, 760, 170)
         topo.centerx = LARGURA // 2
         caixa_pixel(self.tela, topo, p=6)
-        jogo = next((r for r in self.resultados if self.time_usuario in r[:2]), None)
-        if jogo:
-            m, v, gm, gv = jogo[:4]
-            self.tela.blit(self.escudos_medios[m], self.escudos_medios[m].get_rect(center=(topo.x + 110, topo.y + 70)))
-            self.tela.blit(self.escudos_medios[v], self.escudos_medios[v].get_rect(center=(topo.right - 110, topo.y + 70)))
-            texto(self.tela, m, self.fonte_pequena, COR_BORDA, (topo.x + 110, topo.y + 126), "midtop")
-            texto(self.tela, v, self.fonte_pequena, COR_BORDA, (topo.right - 110, topo.y + 126), "midtop")
-            texto(self.tela, f"{gm} x {gv}", self.fonte_placar, COR_BORDA, (topo.centerx, topo.y + 62), "center")
-            meus, deles = (gm, gv) if m == self.time_usuario else (gv, gm)
-            if meus > deles:
-                rotulo, cor = "VITÓRIA!", constantes.VERDE
-            elif meus == deles:
-                rotulo, cor = "EMPATE", constantes.AMARELO
-            else:
-                rotulo, cor = "DERROTA", constantes.VERMELHO
-            texto(self.tela, rotulo, self.fonte_h2, cor, (topo.centerx, topo.y + 118), "midtop")
+        m, v, gm, gv = next(r for r in self.resultados if self.time_usuario in r[:2])[:4]
+        self.tela.blit(self.escudos_medios[m], self.escudos_medios[m].get_rect(center=(topo.x + 110, topo.y + 70)))
+        self.tela.blit(self.escudos_medios[v], self.escudos_medios[v].get_rect(center=(topo.right - 110, topo.y + 70)))
+        texto(self.tela, m, self.fonte_pequena, COR_BORDA, (topo.x + 110, topo.y + 126), "midtop")
+        texto(self.tela, v, self.fonte_pequena, COR_BORDA, (topo.right - 110, topo.y + 126), "midtop")
+        texto(self.tela, f"{gm} x {gv}", self.fonte_placar, COR_BORDA, (topo.centerx, topo.y + 62), "center")
+        meus, deles = (gm, gv) if m == self.time_usuario else (gv, gm)
+        if meus > deles:
+            rotulo, cor = "VITÓRIA!", constantes.VERDE
+        elif meus == deles:
+            rotulo, cor = "EMPATE", constantes.AMARELO
         else:
-            texto(self.tela, "SEU TIME FOLGOU NESTA RODADA", self.fonte_h2, COR_DESTAQUE, topo.center, "center")
+            rotulo, cor = "DERROTA", constantes.VERMELHO
+        texto(self.tela, rotulo, self.fonte_h2, cor, (topo.centerx, topo.y + 118), "midtop")
 
-        outros = pygame.Rect(24, 276, 560, 350)
+        outros = pygame.Rect(0, 272, 760, 300)
+        outros.centerx = LARGURA // 2
         caixa_pixel(self.tela, outros)
-        texto(self.tela, "OUTROS JOGOS", self.fonte, COR_DESTAQUE, (outros.x + 24, outros.y + 20))
-        y = outros.y + 64
+        texto(self.tela, "OUTROS JOGOS DA RODADA", self.fonte, COR_DESTAQUE, (outros.centerx, outros.y + 20), "midtop")
+        y = outros.y + 74
         for m, v, gm, gv, *_ in self.resultados:
             if self.time_usuario in (m, v):
                 continue
-            self.tela.blit(self.escudos_pequenos[m], (outros.x + 24, y - 6))
-            texto(self.tela, f"{m} {gm} x {gv} {v}", self.fonte, COR_BORDA, (outros.x + 72, y))
-            self.tela.blit(self.escudos_pequenos[v], (outros.right - 60, y - 6))
+            self.tela.blit(self.escudos_pequenos[m], (outros.x + 30, y - 6))
+            texto(self.tela, m, self.fonte, COR_BORDA, (outros.x + 80, y))
+            texto(self.tela, f"{gm} x {gv}", self.fonte, COR_DESTAQUE, (outros.centerx, y), "midtop")
+            texto(self.tela, v, self.fonte, COR_BORDA, (outros.right - 80, y), "topright")
+            self.tela.blit(self.escudos_pequenos[v], (outros.right - 66, y - 6))
             y += 52
-        em_jogo = {n for r in self.resultados for n in r[:2]}
-        folga = [n for n in self.tabela if n not in em_jogo]
-        if folga:
-            texto(self.tela, f"Folga: {', '.join(folga)}", self.fonte_pequena, constantes.CINZA, (outros.x + 24, y + 6))
 
-        self.desenhar_tabela(pygame.Rect(608, 276, LARGURA - 632, 350))
         self.desenhar_medidores(24, ALTURA - 74, 860)
 
-    def desenhar_tabela(self, caixa):
+    # ------------------------------------------------------------ tabela da liga
+    def montar_tabela(self):
+        self.botao_avancar()
+
+    def desenhar_tabela(self):
+        self.fundo("campo")
+        self.caixa_titulo(f"CLASSIFICAÇÃO - RODADA {self.rodada}", y=12)
+        caixa = pygame.Rect(0, 82, 820, 410)
+        caixa.centerx = LARGURA // 2
+        self.desenhar_classificacao(caixa)
+        self.desenhar_medidores(caixa.x + 20, caixa.bottom + 24, caixa.w - 40)
+
+    def desenhar_classificacao(self, caixa):
         caixa_pixel(self.tela, caixa)
-        colunas = [("#", 20), ("TIME", 56), ("P", 300), ("J", 350), ("V", 400), ("E", 450), ("D", 500), ("SG", 550)]
+        direita = caixa.w - 50
+        colunas = [("#", 22), ("", 58), ("TIME", 96), ("P", direita - 300), ("J", direita - 240),
+                   ("V", direita - 180), ("E", direita - 120), ("D", direita - 60), ("SG", direita)]
         for rotulo, dx in colunas:
             texto(self.tela, rotulo, self.fonte_pequena, COR_DESTAQUE, (caixa.x + dx, caixa.y + 16))
-        y = caixa.y + 46
+        y = caixa.y + 48
         for pos, (nome, t) in enumerate(self.classificacao(), 1):
             if nome == self.time_usuario:
-                pygame.draw.rect(self.tela, COR_LINHA_USUARIO, (caixa.x + 10, y - 3, caixa.w - 20, 30))
-            valores = [str(pos), nome, t["pts"], t["j"], t["v"], t["e"], t["d"], t["gp"] - t["gc"]]
+                pygame.draw.rect(self.tela, COR_LINHA_USUARIO, (caixa.x + 10, y - 4, caixa.w - 20, 34))
+            esc = self.escudos_mini[nome]
+            self.tela.blit(esc, esc.get_rect(center=(caixa.x + 70, y + 12)))
+            valores = [pos, "", nome, t["pts"], t["j"], t["v"], t["e"], t["d"], t["gp"] - t["gc"]]
             for (_, dx), valor in zip(colunas, valores):
-                texto(self.tela, str(valor), self.fonte_pequena, COR_BORDA, (caixa.x + dx, y), sombra=False)
-            y += 32
-
-    def acao_proxima_rodada(self):
-        self.rodada += 1
-        self.iniciar_rodada()
+                texto(self.tela, str(valor), self.fonte_pequena, COR_BORDA, (caixa.x + dx, y + 2), sombra=False)
+            y += 35
 
     # ------------------------------------------------------------ fim
     def montar_fim(self):
@@ -586,8 +747,7 @@ class Game:
 
     def desenhar_fim(self):
         self.fundo("campo")
-        ordem = [nome for nome, _ in self.classificacao()]
-        posicao = ordem.index(self.time_usuario) + 1
+        posicao = self.posicao_usuario()
         pts = self.tabela[self.time_usuario]["pts"]
         rotulo, cor = self.desfecho(posicao)
 

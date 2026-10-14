@@ -3,6 +3,7 @@ from pathlib import Path
 # Caminhos (sempre relativos à pasta do projeto, não à pasta onde o comando é executado)
 RAIZ = Path(__file__).resolve().parent
 CAMINHO_DECISOES = RAIZ / "data" / "decisoes.json"
+PASTA_AUDIO = RAIZ / "audio"
 CAMINHO_BANCO = RAIZ / "data" / "jogo.db"
 PASTA_ESCUDOS = RAIZ / "assets" / "escudos"
 
@@ -33,3 +34,11 @@ FORCA_MIN = 0
 FORCA_MAX = 100
 BONUS_POR_ACERTO = 8
 CHANCE_EMPATE = 0.15
+GOLS_MAX = 5           # placar realista: ninguém faz mais que isso numa partida
+
+# Influência do técnico no resultado
+MEDIA_BAIXA = 45        # média dos medidores abaixo disso = time em má fase (perde)
+SEQUENCIA_MINIMA = 2    # sem 2+ decisões assertivas seguidas o time perde
+SEQUENCIA_MAXIMA = 4    # a sequência dá bônus de força só até aqui
+
+VOLUME_INICIAL = 0.5
