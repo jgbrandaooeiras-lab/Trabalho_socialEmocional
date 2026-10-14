@@ -1,150 +1,239 @@
 # ⚽ Simulador de Técnico de Futebol
 
-Jogo em **Python + pygame** em que você assume o comando de um time em um torneio de pontos corridos. A cada partida surgem situações de bastidores (vestiário, imprensa, diretoria, torcida) e suas decisões afetam os medidores do técnico, que por sua vez influenciam o desempenho do time na simulação. Vence o torneio quem somar mais pontos.
+Jogo em Python + pygame em que o jogador assume o papel de técnico de um time em um campeonato de pontos corridos. A cada rodada surgem situações de bastidores — vestiário, imprensa, diretoria, torcida e ambiente de competição — e as decisões tomadas alteram os medidores do técnico, que influenciam diretamente a força do time nas partidas.
 
-## Como funciona
+O projeto combina gestão, simulação esportiva, persistência em banco SQLite e uma interface gráfica em pygame. A vitória depende de boas escolhas, mais do que de sorte.
 
-- O torneio tem 10 times (a lista fica em `times.py`), e cada um enfrenta todos os outros uma vez: 9 rodadas, sem folga.
-- Nas rodadas 1 a 8 o técnico toma uma decisão com 4 opções. A ordem das telas da rodada (anúncio, coletiva, decisão, resultado, tabela) vem do campo `fluxo` de cada decisão no `data/decisoes.json`; `condicao` escolhe entre duas decisões da mesma rodada (ex.: fora do top 3 ou mais de 3 derrotas) e `"resultado": "derrota"` faz o time perder aquela partida.
-- Medidores com média abaixo de 45 ou sem sequência de 2+ decisões assertivas seguidas = derrota. Com a sequência, cada acerto seguido (até 4) soma força ao time.
-- Música em loop (`audio/audiojogo.*`) e tela de configurações (botão CONFIG ou ESC) para volume, voltar ao menu inicial ou sair.
-- Cada opção altera três medidores (de 0 a 100):
-  - **Relacionamento**: clima com elenco e torcida
-  - **Estabilidade**: segurança no cargo
-  - **Reputação**: imagem perante imprensa e diretoria
-- Os medidores dão um bônus (ou penalidade) de até ±15 na força do seu time. Medidores altos aumentam as chances de vitória.
-- A força varia em até ±15 em torno da força base de cada time a cada rodada.
-- Cada decisão marcada como assertiva soma 8 pontos à força do seu time naquela partida, até o limite de 100.
-- Vitória vale 3 pontos, empate 1 e derrota 0. Critérios de desempate: saldo de gols e gols marcados.
+## ✅ Novas funcionalidades implementadas
 
-## Salvamento com SQLite
+- Sistema de torneio completo em pontos corridos
+- Calendário gerado automaticamente com todos contra todos
+- Simulação de partidas com força base, variação aleatória e bônus do técnico
+- Medidores de desempenho com limites entre 0 e 100
+- Decisões condicionais por contexto de rodada e situação do time
+- Fluxos de telas dinâmicos por partida
+- Histórico de partidas e decisões salvas em banco de dados
+- Múltiplos saves simultâneos com retomada do progresso
+- Checkpoints por rodada para voltar em um save anterior
+- Classificação calculada no próprio jogo
+- Modo de terminal para testes sem abrir a janela do pygame
+- Menu com seleção de time, carregamento de save e tela de configurações
+- Música em loop com controle de volume e ações de voltar ao menu/sair
+- Testes automatizados cobrindo decisões, regras novas e persistência
 
-O progresso é guardado em um banco SQLite (`data/jogo.db`, criado automaticamente), o que permite:
+## 🎮 Como o jogo funciona
 
-- **Ver o histórico** de partidas e de decisões tomadas
-- **Retomar** um torneio já iniciado
-- **Voltar a uma rodada anterior** (checkpoint ao fim de cada rodada)
-- Ter **vários saves** ao mesmo tempo
-- Consultar a **classificação** calculada direto das partidas
+### Torneio e calendário
 
-A rodada é gravada de uma só vez ao terminar. Se você fechar o jogo no meio de uma rodada, ela recomeça do início, sem deixar dados pela metade.
+- O campeonato é montado com todos os times jogando entre si em turno único.
+- Cada rodada contém uma lista de jogos.
+- O usuário controla apenas um time, enquanto os demais são simulados pelo sistema.
+- O torneio termina quando todas as rodadas forem disputadas.
+- Vitória vale 3 pontos, empate 1 e derrota 0.
+- Critérios de desempate: saldo de gols e gols marcados.
 
-| Tabela        | Conteúdo                                                         |
-|---------------|------------------------------------------------------------------|
-| `torneios`    | Um save por linha: time do usuário, rodada atual, medidores      |
-| `partidas`    | Todas as partidas simuladas (times, gols, forças usadas e acertos) |
-| `decisoes`    | Decisões tomadas e medidores resultantes                         |
-| `checkpoints` | Foto dos medidores ao fim de cada rodada, usada para voltar save |
+### Medidores do técnico
 
-## Tecnologias
+Cada escolha do técnico altera três medidores:
 
-- Python 3
-- [pygame](https://www.pygame.org/)
-- SQLite (módulo `sqlite3` da biblioteca padrão)
+- Relacionamento: clima com elenco e torcida
+- Estabilidade: segurança no cargo
+- Reputação: imagem perante imprensa e diretoria
 
-## Como executar
+Os medidores ficam entre 0 e 100 e impactam a força do time. Também são usados para validar a saúde do técnico durante o torneio.
 
-```bash
-# 1. clone o repositório
-git clone https://github.com/<seu-usuario>/<nome-do-repositorio>.git
-cd <nome-do-repositorio>
+### Regras de decisão
 
-# 2. (opcional) crie um ambiente virtual
-python -m venv venv
-venv\Scripts\activate        # Windows
-# source venv/bin/activate   # Linux/macOS
+- Cada partida pode ter uma ou mais decisões.
+- O arquivo de decisões define o fluxo de telas, textos, opções e efeitos.
+- A escolha do jogador pode ser assertiva ou não, conforme o campo `assertiva` da opção.
+- Decisões podem depender de condições do momento, como:
+  - número de derrotas
+  - posição na tabela
+  - status da rodada
+  - resultado anterior do time
+- O sistema aceita `condicao` e também o fluxo alternativo `senao`.
 
-# 3. instale a dependência
-pip install pygame
+### Simulação de força e resultado
 
-# 4. execute o jogo
-python main.py
-```
+- A força de cada time varia em torno da base do clube em até ±15 pontos.
+- O técnico adiciona um bônus ou penalidade com base na média dos medidores.
+- Decisões assertivas aumentam a força do time naquela partida em 8 pontos por acerto, até o limite máximo.
+- Quando a média dos medidores cai demais, ou a sequência de decisões assertivas não é suficiente, o time pode entrar em situação crítica.
 
-Também existe uma versão de terminal, com as mesmas regras e o mesmo banco, útil para testar sem abrir janela:
+## 💾 Salvamento com SQLite
 
-```bash
-python jogo_terminal.py
-```
+O progresso é salvo em um banco SQLite em `data/jogo.db`, criado automaticamente. Isso permite:
 
-## Testes
+- Retomar um torneio já iniciado
+- Ver histórico de partidas
+- Consultar decisões tomadas
+- Salvar vários torneios ao mesmo tempo
+- Voltar para um checkpoint anterior de rodada
+- Continuar do ponto exato em que o jogo foi interrompido
 
-Execute a partir da **raiz** do projeto:
+### Estrutura das tabelas
 
-```bash
-python -c "import runpy; runpy.run_path('tests/teste_decisoes.py', run_name='__main__')"
-python -c "import runpy; runpy.run_path('tests/teste_novas_regras.py', run_name='__main__')"
-```
+| Tabela | Conteúdo |
+| --- | --- |
+| `torneios` | Save principal do torneio: time do usuário, rodada atual, medidores e status |
+| `partidas` | Resultados de cada partida, incluindo gols, força utilizada e acertos |
+| `decisoes` | Decisões tomadas pelo usuário e os efeitos aplicados |
+| `checkpoints` | Instante do fim de cada rodada para permitir voltar no save |
 
-Os testes do banco usam um banco em memória e não mexem no seu `data/jogo.db`.
+A rodada é gravada de uma vez ao fim do processamento. Se o jogo for fechado no meio da rodada, o sistema evita deixar dados incompletos.
 
-## Estrutura do projeto
+## 🧩 Arquitetura do projeto
 
-```
-├── main.py                  # janela, telas e fluxo do jogo (pygame)
-├── jogo_terminal.py         # versão de terminal
-├── constantes.py            # tamanho da tela, FPS, cores e caminhos
-├── times.py                 # dados dos times (nome, escudo, força)
-├── torneio.py               # calendário, simulação das partidas e bônus do técnico
-├── assets/
-│   └── escudos/             # imagens dos escudos
+```text
+├── main.py                    # tela principal e fluxo do jogo em pygame
+├── maingame.py                # módulo de fluxo e lógica do jogo
+├── jogo_terminal.py           # versão textual do campeonato
+├── tela.py                    # interface gráfica principal
+├── constantes.py              # ajustes gerais, cores, dimensões e caminhos
+├── times.py                   # dados dos times e configurações da liga
+├── torneio.py                 # calendário, simulação e lógica do torneio
 ├── data/
-│   └── decisoes.json        # decisões do técnico por partida
+│   ├── decisoes.json          # regras das decisões e opções do jogo
+│   └── jogo.db               # banco SQLite gerado automaticamente
+├── audio/
+│   └── audiojogo.mpeg         # música de fundo do jogo
+├── imagens/
+│   ├── coletiva.jfif
+│   ├── jogadorbarato.piskel
+│   ├── sem_fundo/
+│   ├── técnico.piskel
+│   └── vorcaro.jfif
 ├── src/
-│   ├── systems/
-│   │   ├── sistema_decisao.py   # carrega decisões e aplica efeitos nos medidores
-│   │   └── banco_dados.py       # persistência com SQLite
-│   └── ui/
-│       └── componentes.py       # botões, textos, barras e escudos do pygame
-└── tests/
-    ├── teste_decisoes.py
-    ├── teste_torneio.py
-    └── teste_banco.py
+│   ├── __init__.py
+│   ├── core/
+│   ├── entities/
+│   ├── ui/
+│   └── systems/
+│       ├── __init__.py
+│       ├── banco_dados.py     # persistência com SQLite
+│       ├── bandoDados.py      # alternativa/arquivo auxiliar de banco
+│       ├── sistema_decisao.py # leitura, condição e aplicabilidade das decisões
+│       └── copytxt
+├── tests/
+│   ├── teste_decisoes.py
+│   ├── teste_novas_regras.py
+│   └── ...
+├── README.md
+├── para_agente.txt
+├── remover_fundo.py
+├── desfazer_projeto.py
+├── logo rated.piskel
+├── campo de futebol.piskel
+├── técnico.piskel
+├── jogadorbarato.piskel
+└── ...
 ```
 
-### Formato das decisões (`data/decisoes.json`)
+## 🧠 Formato das decisões
+
+O arquivo `data/decisoes.json` organiza cada evento em um objeto com estrutura similar a esta:
 
 ```json
 {
   "id": "d01",
   "id_partida": 1,
   "texto": "Seu time perdeu a estreia e o clima no vestiário está pesado",
+  "fluxo": ["anuncio", "decisao", "resultado", "tabela"],
+  "condicao": {"derrotas_acima_de": 2},
   "opcoes": [
     {
       "texto": "Reunir elenco e assumir parte da culpa",
       "assertiva": true,
-      "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 0}
+      "efeitos": {
+        "relacionamento": 10,
+        "estabilidade": 5,
+        "reputacao": 0
+      }
+    },
+    {
+      "texto": "Cobrar mais dos atletas na coletiva",
+      "assertiva": false,
+      "efeitos": {
+        "relacionamento": -8,
+        "estabilidade": 4,
+        "reputacao": 3
+      }
     }
   ]
 }
 ```
 
-O `id_partida` é o número da partida **do seu time** (1ª, 2ª, 3ª...), não da rodada. Uma partida pode ter mais de uma decisão. Marque `assertiva` como `true` nas opções que concedem bônus; use `false` nas demais. Para adicionar uma decisão, basta incluir um novo objeto no arquivo. Com N times, o time do usuário joga N-1 partidas, então o `id_partida` vai de 1 até N-1.
+### Observações importantes
 
-### Adicionando um time
+- `id_partida` representa a partida do time do usuário, e não a rodada do campeonato.
+- `condicao` permite decidir entre alternativas conforme a situação atual do clube.
+- `assertiva` marca uma opção como decision point que aumenta a força do time.
+- O campo `fluxo` controla a ordem das telas da rodada.
 
-1. Coloque o escudo em `assets/escudos/`.
-2. Acrescente uma linha em `TIMES` no `times.py` (nome, arquivo do escudo e força).
-3. Se for criar um novo torneio, está pronto. Saves antigos foram criados com o calendário antigo, então evite mexer em `TIMES` com saves em andamento.
+## 🛠️ Tecnologias utilizadas
 
-## Roadmap
+- Python
+- pygame
+- SQLite
+- JSON para dados de decisão e configuração
+
+## ▶️ Como executar
+
+```bash
+# 1. clone o repositório
+git clone <url-do-repositorio>
+cd <pasta-do-projeto>
+
+# 2. (opcional) crie um ambiente virtual
+python -m venv venv
+venv\Scripts\activate       # Windows
+# source venv/bin/activate  # Linux/macOS
+
+# 3. instale as dependências
+pip install pygame
+
+# 4. execute a versão gráfica
+python main.py
+```
+
+Também existe uma versão textual do jogo, útil para testar regras e lógica sem abrir a janela:
+
+```bash
+python jogo_terminal.py
+```
+
+## 🧪 Testes
+
+Execute a partir da raiz do projeto:
+
+```bash
+python -c "import runpy; runpy.run_path('tests/teste_decisoes.py', run_name='__main__')"
+python -c "import runpy; runpy.run_path('tests/teste_novas_regras.py', run_name='__main__')"
+```
+
+Os testes usam banco em memória e não alteram o banco real do jogo (`data/jogo.db`).
+
+## 📌 Roadmap e status
 
 - [x] Sistema de decisões com medidores limitados entre 0 e 100
-- [x] Camada de persistência em SQLite (histórico, retomar e voltar save)
-- [x] Cadastro dos times e escudos
-- [x] Calendário todos contra todos
-- [x] Simulação de partidas influenciada pelos medidores
-- [x] Telas do pygame (menu, decisão, resultado, classificação, histórico)
-- [x] Integração do jogo com o salvamento
-- [x] Testes do calendário, da simulação e do banco de dados
-- [ ] Nono time
-- [ ] Decisões condicionadas ao resultado da partida (vitória, derrota)
-- [ ] Sons e animações
+- [x] Persistência com SQLite e saves múltiplos
+- [x] Checkpoints e retorno de rodada
+- [x] Calendário de todos contra todos
+- [x] Simulação de partidas com força, bônus e ranqueamento
+- [x] Interface em pygame com menu, decisão, resultado e classificação
+- [x] Sistema de histórico e classificação
+- [x] Música, volume e opções de menu
+- [x] Condições em decisões e fluxo dinâmico
+- [x] Testes automatizados de regras e banco
+- [ ] Evolução de assets e artes finais
+- [ ] Novos modos e expansões de conteúdo
+- [ ] Ajustes visuais e refinamento da UI
 
-## Autores
+## 👥 Autores
 
-- _Adicione aqui os nomes dos integrantes da equipe_
+Equipe responsável pelo desenvolvimento do projeto.
 
-## Licença
+## 📄 Licença
 
-_Defina a licença do projeto (por exemplo, MIT) ou remova esta seção._
+A licença ainda não foi definida para este repositório. Defina uma licença antes de distribuir o projeto publicamente.
