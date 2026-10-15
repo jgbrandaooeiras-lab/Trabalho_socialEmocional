@@ -62,6 +62,38 @@
         "id": "d03",
         "cenario": "coletiva",
         "id_partida": 3,
+        "condicao": {"assertivas_seguidas_min": 2},
+        "fluxo": ["anuncio", "resultado", "decisao", "tabela"],
+        "resultado": "vitoria",
+        "texto": "Depois da derrota na estreia, o time reagiu e venceu. Um repórter pergunta na coletiva se essa vitória é mérito seu",
+        "opcoes": [
+            {
+                "texto": "Dividir o mérito com o elenco, comissão e a torcida, e dizer que ainda há muito a melhorar",
+                "assertiva": true,
+                "efeitos": {"relacionamento": 10, "estabilidade": 5, "reputacao": 10}
+            },
+            {
+                "texto": "Dizer que a vitória veio das suas escolhas e que agora o time tem um técnico de verdade",
+                "assertiva": false,
+                "efeitos": {"relacionamento": -10, "estabilidade": -5, "reputacao": 5}
+            },
+            {
+                "texto": "Provocar os críticos que pediram sua saída depois da estreia",
+                "assertiva": false,
+                "efeitos": {"relacionamento": -5, "estabilidade": -10, "reputacao": -10}
+            },
+            {
+                "texto": "Prometer o título para a torcida já nessa rodada",
+                "assertiva": false,
+                "efeitos": {"relacionamento": 5, "estabilidade": -5, "reputacao": -10}
+            }
+        ]
+    },
+    {
+        "id": "d03b",
+        "cenario": "coletiva",
+        "id_partida": 3,
+        "condicao": "senao",
         "fluxo": ["anuncio", "resultado", "decisao", "tabela"],
         "resultado": "derrota",
         "texto": "Após a derrota, um repórter pergunta na coletiva se você vai continuar no cargo",

@@ -443,7 +443,8 @@ class Game:
         mandante, visitante = self.jogo_usuario
         self.adversario = visitante if mandante == self.time_usuario else mandante
         self.numero_partida = torneio.numero_do_jogo_do_usuario(self.calendario, self.rodada, self.time_usuario)
-        situacao = {"derrotas": self.tabela[self.time_usuario]["d"], "posicao": self.posicao_usuario()}
+        situacao = {"derrotas": self.tabela[self.time_usuario]["d"], "posicao": self.posicao_usuario(),
+                    "sequencia": self.sequencia}
         self.decisao_rodada = sd.escolher_decisao(self.decisoes, self.numero_partida, situacao)
         self.etapas = sd.fluxo_da_rodada(self.decisao_rodada)
         self.resultados = None
@@ -624,12 +625,16 @@ class Game:
     # ------------------------------------------------------------ simulação e resultado
     def simular(self):
         """Medidores baixos, sem sequência de 2+ acertos ou derrota roteirizada (campo
-        "resultado" do JSON) -> o time perde. Senão a sequência dá bônus de força."""
-        forcar_derrota = ((self.decisao_rodada or {}).get("resultado") == "derrota"
-                          or torneio.time_em_ma_fase(self.tecnico, self.sequencia))
+        "resultado" do JSON) -> o time perde. Vitória roteirizada -> o time vence.
+        Senão a sequência dá bônus de força."""
+        roteiro = (self.decisao_rodada or {}).get("resultado")
+        forcar_vitoria = roteiro == "vitoria"
+        forcar_derrota = not forcar_vitoria and (
+            roteiro == "derrota" or torneio.time_em_ma_fase(self.tecnico, self.sequencia))
         self.resultados = torneio.simular_rodada(
             self.jogos, self.forcas, self.time_usuario, self.tecnico,
-            acertos=min(self.sequencia, constantes.SEQUENCIA_MAXIMA), forcar_derrota=forcar_derrota)
+            acertos=min(self.sequencia, constantes.SEQUENCIA_MAXIMA),
+            forcar_derrota=forcar_derrota, forcar_vitoria=forcar_vitoria)
         for mandante, visitante, gm, gv, *_ in self.resultados:
             for nome, gp, gc in ((mandante, gm, gv), (visitante, gv, gm)):
                 t = self.tabela[nome]
