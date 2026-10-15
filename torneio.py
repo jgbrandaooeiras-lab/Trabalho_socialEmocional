@@ -7,13 +7,14 @@ from times import sortear_forcas_da_rodada
 from src.systems import sistema_decisao as sd
 
 
-def gerar_calendario(nomes):
-    """Todos contra todos em turno único (método do círculo).
+def gerar_calendario(nomes, rng=random):
+    """Todos contra todos em turno único (método do círculo), em ordem aleatória.
 
     Retorna uma lista de rodadas; cada rodada é uma lista de (mandante, visitante).
     Com número ímpar de times, um time folga em cada rodada.
     """
     times = list(nomes)
+    rng.shuffle(times)
     if len(times) % 2:
         times.append(None)  # None = folga
     n = len(times)
@@ -29,6 +30,7 @@ def gerar_calendario(nomes):
             jogos.append((a, b))
         rodadas.append(jogos)
         times.insert(1, times.pop())  # gira todos, menos o primeiro
+    rng.shuffle(rodadas)
     return rodadas
 
 

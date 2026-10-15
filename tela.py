@@ -1,3 +1,4 @@
+import random
 import sys
 
 import pygame
@@ -424,6 +425,7 @@ class Game:
 
     def acao_escolher_time(self, nome):
         self.time_usuario = nome
+        self.calendario = torneio.gerar_calendario(nomes_dos_times())  # nova ordem a cada campeonato
         self.tecnico = dict(constantes.TECNICO_INICIAL)
         self.tabela = {n: {"pts": 0, "j": 0, "v": 0, "e": 0, "d": 0, "gp": 0, "gc": 0}
                        for n in nomes_dos_times()}
@@ -458,7 +460,10 @@ class Game:
             return
         etapa = self.etapas.pop(0)
         if etapa == "decisao":
-            self.decisao_atual = self.decisao_rodada
+            # cópia com as alternativas embaralhadas: a certa não fica sempre na mesma letra
+            opcoes = list(self.decisao_rodada["opcoes"])
+            random.shuffle(opcoes)
+            self.decisao_atual = {**self.decisao_rodada, "opcoes": opcoes}
             self.ir_para("decisao")
         elif etapa == "resultado":
             self.simular()
