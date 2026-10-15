@@ -33,10 +33,14 @@ def condicao_atendida(decisao, situacao):
 
     - sem "condicao" ou "senao": sempre vale (o "senao" é a alternativa da mesma partida)
     - {"derrotas_acima_de": n, "fora_do_top": p}: vale se QUALQUER critério for verdadeiro
-    situacao = {"derrotas": int, "posicao": int}
+    - {"assertivas_seguidas_min": n}: vale se o técnico acertou n+ decisões seguidas
+    situacao = {"derrotas": int, "posicao": int, "sequencia": int}
     """
     condicao = decisao.get("condicao")
     if condicao in (None, "senao"):
+        return True
+    if ("assertivas_seguidas_min" in condicao
+            and situacao.get("sequencia", 0) >= condicao["assertivas_seguidas_min"]):
         return True
     if "derrotas_acima_de" in condicao and situacao["derrotas"] > condicao["derrotas_acima_de"]:
         return True

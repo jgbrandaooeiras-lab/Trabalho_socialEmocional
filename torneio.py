@@ -7,13 +7,14 @@ from times import sortear_forcas_da_rodada
 from src.systems import sistema_decisao as sd
 
 
-def gerar_calendario(nomes):
-    """Todos contra todos em turno único (método do círculo).
+def gerar_calendario(nomes, rng=random):
+    """Todos contra todos em turno único (método do círculo), em ordem aleatória.
 
     Retorna uma lista de rodadas; cada rodada é uma lista de (mandante, visitante).
     Com número ímpar de times, um time folga em cada rodada.
     """
     times = list(nomes)
+    rng.shuffle(times)
     if len(times) % 2:
         times.append(None)  # None = folga
     n = len(times)
@@ -29,6 +30,7 @@ def gerar_calendario(nomes):
             jogos.append((a, b))
         rodadas.append(jogos)
         times.insert(1, times.pop())  # gira todos, menos o primeiro
+    rng.shuffle(rodadas)
     return rodadas
 
 
@@ -66,6 +68,12 @@ def placar_de_derrota(rng=random):
     return rng.choice(PLACARES_DE_DERROTA)
 
 
+def placar_de_vitoria(rng=random):
+    """O inverso de uma derrota realista: (gols do usuário, gols do adversário)."""
+    deles, meus = placar_de_derrota(rng)
+    return meus, deles
+
+
 def time_em_ma_fase(tecnico, sequencia):
     """Medidores baixos ou sem sequência de 2+ decisões assertivas -> o time perde."""
     media = sum(tecnico.values()) / len(tecnico)
@@ -91,10 +99,11 @@ def numero_do_jogo_do_usuario(calendario, rodada, time_usuario):
 
 
 def simular_rodada(jogos, forcas, time_usuario, tecnico, rng=random, acertos=0,
-                   forcar_derrota=False):
+                   forcar_derrota=False, forcar_vitoria=False):
     """Simula os jogos com força sorteada; decisões assertivas favorecem o usuário.
 
-    Com forcar_derrota=True o time do usuário perde com um placar realista.
+    Com forcar_derrota=True o time do usuário perde com um placar realista;
+    com forcar_vitoria=True ele vence (a derrota tem prioridade).
 
     Retorna (mandante, visitante, gols_mandante, gols_visitante, forca_casa,
     forca_fora, acertos) para cada partida.
@@ -116,6 +125,9 @@ def simular_rodada(jogos, forcas, time_usuario, tecnico, rng=random, acertos=0,
         gols_m, gols_v = simular_partida(forca_m, forca_v, rng)
         if forcar_derrota and time_usuario in (mandante, visitante):
             meus, deles = placar_de_derrota(rng)
+            gols_m, gols_v = (meus, deles) if mandante == time_usuario else (deles, meus)
+        elif forcar_vitoria and time_usuario in (mandante, visitante):
+            meus, deles = placar_de_vitoria(rng)
             gols_m, gols_v = (meus, deles) if mandante == time_usuario else (deles, meus)
         resultados.append((mandante, visitante, gols_m, gols_v, forca_m, forca_v,
                            acertos_partida))

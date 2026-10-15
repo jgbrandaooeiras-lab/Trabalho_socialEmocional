@@ -1,3 +1,4 @@
+import random
 import sys
 
 import pygame
@@ -424,6 +425,7 @@ class Game:
 
     def acao_escolher_time(self, nome):
         self.time_usuario = nome
+        self.calendario = torneio.gerar_calendario(nomes_dos_times())  # nova ordem a cada campeonato
         self.tecnico = dict(constantes.TECNICO_INICIAL)
         self.tabela = {n: {"pts": 0, "j": 0, "v": 0, "e": 0, "d": 0, "gp": 0, "gc": 0}
                        for n in nomes_dos_times()}
@@ -443,7 +445,8 @@ class Game:
         mandante, visitante = self.jogo_usuario
         self.adversario = visitante if mandante == self.time_usuario else mandante
         self.numero_partida = torneio.numero_do_jogo_do_usuario(self.calendario, self.rodada, self.time_usuario)
-        situacao = {"derrotas": self.tabela[self.time_usuario]["d"], "posicao": self.posicao_usuario()}
+        situacao = {"derrotas": self.tabela[self.time_usuario]["d"], "posicao": self.posicao_usuario(),
+                    "sequencia": self.sequencia}
         self.decisao_rodada = sd.escolher_decisao(self.decisoes, self.numero_partida, situacao)
         self.etapas = sd.fluxo_da_rodada(self.decisao_rodada)
         self.resultados = None
@@ -457,7 +460,10 @@ class Game:
             return
         etapa = self.etapas.pop(0)
         if etapa == "decisao":
-            self.decisao_atual = self.decisao_rodada
+            # cópia com as alternativas embaralhadas: a certa não fica sempre na mesma letra
+            opcoes = list(self.decisao_rodada["opcoes"])
+            random.shuffle(opcoes)
+            self.decisao_atual = {**self.decisao_rodada, "opcoes": opcoes}
             self.ir_para("decisao")
         elif etapa == "resultado":
             self.simular()
@@ -624,12 +630,16 @@ class Game:
     # ------------------------------------------------------------ simulação e resultado
     def simular(self):
         """Medidores baixos, sem sequência de 2+ acertos ou derrota roteirizada (campo
-        "resultado" do JSON) -> o time perde. Senão a sequência dá bônus de força."""
-        forcar_derrota = ((self.decisao_rodada or {}).get("resultado") == "derrota"
-                          or torneio.time_em_ma_fase(self.tecnico, self.sequencia))
+        "resultado" do JSON) -> o time perde. Vitória roteirizada -> o time vence.
+        Senão a sequência dá bônus de força."""
+        roteiro = (self.decisao_rodada or {}).get("resultado")
+        forcar_vitoria = roteiro == "vitoria"
+        forcar_derrota = not forcar_vitoria and (
+            roteiro == "derrota" or torneio.time_em_ma_fase(self.tecnico, self.sequencia))
         self.resultados = torneio.simular_rodada(
             self.jogos, self.forcas, self.time_usuario, self.tecnico,
-            acertos=min(self.sequencia, constantes.SEQUENCIA_MAXIMA), forcar_derrota=forcar_derrota)
+            acertos=min(self.sequencia, constantes.SEQUENCIA_MAXIMA),
+            forcar_derrota=forcar_derrota, forcar_vitoria=forcar_vitoria)
         for mandante, visitante, gm, gv, *_ in self.resultados:
             for nome, gp, gc in ((mandante, gm, gv), (visitante, gv, gm)):
                 t = self.tabela[nome]
